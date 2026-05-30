@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Draw — Master</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;font-family:'Exo 2',sans-serif;color:#d4b896;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(40,80,220,0.06),transparent 50%)}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-screen{position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:1000}
+.login-box{background:#111;border:1px solid rgba(80,120,220,0.3);border-radius:16px;padding:36px;width:90%;max-width:340px;text-align:center}
+.app-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:#7ea8ff;margin-bottom:4px}
+.app-sub{font-size:10px;color:rgba(80,120,220,0.4);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px}
+.topbar{display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;border-bottom:1px solid rgba(80,100,220,0.15);padding:12px 16px;position:sticky;top:0;z-index:99}
+.topbar-title{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:#7ea8ff;letter-spacing:2px}
+.tabs{display:flex;background:#0d0d0d;border-bottom:1px solid rgba(80,100,220,0.1);overflow-x:auto}
+.tab{flex:0 0 auto;padding:11px 16px;text-align:center;cursor:pointer;font-size:10px;font-weight:600;letter-spacing:1px;color:rgba(80,120,220,0.35);border-bottom:1px solid transparent;transition:all 0.3s;text-transform:uppercase;white-space:nowrap}
+.tab.on{color:#7ea8ff;border-bottom-color:#7ea8ff}
+.pg{display:none;max-width:900px;margin:0 auto;padding:16px 12px 80px}
+.pg.on{display:block;animation:fadeUp 0.3s ease}
+.card{background:#111;border:1px solid rgba(80,100,220,0.1);border-radius:12px;padding:16px;margin-bottom:12px}
+.ct{font-size:9px;color:rgba(80,120,220,0.65);letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(80,100,220,0.07);display:flex;align-items:center;gap:7px}
+.ct::before{content:'';width:12px;height:1px;background:rgba(80,120,220,0.5)}
+label{font-size:10px;color:rgba(80,120,220,0.4);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:4px;margin-top:10px}
+label:first-child{margin-top:0}
+input,select{background:#0d0d0d;border:1px solid rgba(80,100,220,0.12);border-radius:7px;color:#d4b896;padding:9px 12px;font-family:'Exo 2',sans-serif;font-size:13px;width:100%;outline:none;transition:all 0.2s}
+input:focus,select:focus{border-color:rgba(80,120,220,0.4)}
+select option{background:#111}
+.btn{padding:9px 16px;border:none;border-radius:7px;cursor:pointer;font-family:'Exo 2',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;transition:all 0.2s}
+.bg{background:linear-gradient(135deg,#7a4e00,#c8a050,#7a4e00);background-size:200%;color:#0a0a0a;font-weight:800;animation:shimmer 3s linear infinite}
+.bg:hover{transform:translateY(-1px)}
+.bn{background:rgba(40,160,80,0.12);border:1px solid rgba(40,180,80,0.25);color:#5ddd8a}
+.br{background:rgba(160,30,30,0.12);border:1px solid rgba(180,40,40,0.25);color:#e87070}
+.bb{background:rgba(40,80,200,0.12);border:1px solid rgba(50,90,220,0.25);color:#7ea8ff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+@media(max-width:500px){.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}}
+.scr{overflow-y:auto}
+.scr::-webkit-scrollbar{width:2px}
+.scr::-webkit-scrollbar-thumb{background:rgba(80,100,220,0.3);border-radius:2px}
+.empty{text-align:center;color:rgba(80,120,220,0.18);font-size:12px;padding:18px;font-style:italic}
+.pi{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;background:#0d0d0d;border:1px solid rgba(80,100,220,0.07);margin-bottom:6px}
+.pn{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#7ea8ff,#3060c0);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#fff;flex-shrink:0}
+.as{background:#0d0d0d;border:1px solid rgba(80,100,220,0.08);border-radius:9px;padding:11px;text-align:center}
+.av{font-family:'Orbitron',monospace;font-size:17px;color:#7ea8ff;font-weight:700}
+.al{font-size:9px;color:rgba(80,120,220,0.35);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.tx{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:7px;background:#0d0d0d;border:1px solid rgba(80,100,220,0.07);margin-bottom:5px}
+.tx-plus{color:#5ddd8a;font-weight:700;font-size:13px;min-width:18px}
+.tx-minus{color:#e87070;font-weight:700;font-size:13px;min-width:18px}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-110px);background:rgba(10,10,10,0.98);border-radius:10px;padding:10px 22px;font-size:13px;font-weight:600;z-index:500;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);text-align:center;min-width:180px;border:1px solid rgba(80,100,220,0.15);box-shadow:0 8px 30px rgba(0,0,0,0.9)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.tg{border-color:rgba(60,200,100,0.4)!important;color:#5ddd8a}
+.tl{border-color:rgba(180,40,40,0.35)!important;color:#e87070}
+.tb{border-color:rgba(80,120,220,0.4)!important;color:#7ea8ff}
+.loading{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:2000}
+.loading.show{display:flex}
+.spin{width:40px;height:40px;border:3px solid rgba(80,100,220,0.2);border-top-color:#7ea8ff;border-radius:50%;animation:spin 0.8s linear infinite}
+</style>
+</head>
+<body>
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="app-title">🧑‍💼 MASTER</div>
+    <div class="app-sub">Gold Lucky Draw</div>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="master@example.com" style="margin-bottom:10px">
+    <label>Password</label>
+    <input type="password" id="loginPass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" style="margin-bottom:14px">
+    <button class="btn bg" style="width:100%;padding:13px;margin-bottom:8px" onclick="doLogin()">LOGIN →</button>
+    <div style="font-size:11px;color:#e87070;display:none;text-align:center" id="loginErr">❌ Login failed!</div>
+  </div>
+</div>
+
+<div id="mainApp" style="display:none">
+  <div class="topbar">
+    <div class="topbar-title">🧑‍💼 MASTER</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-family:'Orbitron',monospace;font-size:13px;color:#7ea8ff" id="masterBal">₹0</div>
+      <button class="btn br" onclick="doLogout()" style="padding:5px 10px;font-size:10px">Exit</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" id="t0" onclick="goPg('dashboard')">📊 Dashboard</div>
+    <div class="tab" id="t1" onclick="goPg('createuser')">✚ Create User</div>
+    <div class="tab" id="t2" onclick="goPg('transfer')">💰 Transfer</div>
+    <div class="tab" id="t3" onclick="goPg('myusers')">👥 My Users</div>
+    <div class="tab" id="t4" onclick="goPg('transactions')">📋 History</div>
+  </div>
+
+  <div class="pg on" id="pg-dashboard">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="as"><div class="av" id="dashBal">₹0</div><div class="al">My Balance</div></div>
+      <div class="as"><div class="av" id="dashUsers">0</div><div class="al">My Users</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Recent Transactions</div>
+      <div class="scr" id="dashTx" style="max-height:300px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <div class="pg" id="pg-createuser">
+    <div class="card" style="background:#100f18;border-color:rgba(80,100,220,0.15)">
+      <div class="ct">Naya User Banao</div>
+      <div class="g2">
+        <div><label>Email</label><input type="email" id="uEmail" placeholder="user@example.com"></div>
+        <div><label>Password</label><input type="password" id="uPass" placeholder="Min 6 chars"></div>
+      </div>
+      <div class="g2" style="margin-top:8px">
+        <div><label>Username</label><input type="text" id="uName" placeholder="Display naam"></div>
+        <div><label>Starting Balance (₹)</label><input type="number" id="uBal" value="1000"></div>
+      </div>
+      <button class="btn bb" onclick="createUser()" style="width:100%;margin-top:10px;padding:11px">✚ User Create Karo</button>
+      <div style="font-size:11px;color:rgba(80,120,220,0.4);margin-top:8px">Mera Balance: <b style="color:#7ea8ff" id="createBal">₹0</b></div>
+    </div>
+  </div>
+
+  <div class="pg" id="pg-transfer">
+    <div class="card">
+      <div class="ct">Token Transfer → User</div>
+      <div class="g3">
+        <div><label>User Select</label><select id="tUser"><option value="">Choose user</option></select></div>
+        <div><label>Amount (₹)</label><input type="number" id="tAmt" placeholder="Amount"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn bg" onclick="doTransfer()" style="width:100%;padding:10px">→ Send</button></div>
+      </div>
+      <div style="font-size:11px;color:rgba(80,120,220,0.4);margin-top:8px">Mera Balance: <b style="color:#7ea8ff" id="transferBal">₹0</b></div>
+    </div>
+  </div>
+
+  <div class="pg" id="pg-myusers">
+    <div class="card">
+      <div class="ct">Mere Users (<span id="usersCount">0</span>)</div>
+      <div class="scr" id="usersList" style="max-height:400px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <div class="pg" id="pg-transactions">
+    <div class="card">
+      <div class="ct">Transaction History (<span id="txCount">0</span>)</div>
+      <div class="scr" id="txList" style="max-height:500px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="loading" id="loading"><div class="spin"></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+window.__moduleLoaded = true;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, addDoc, collection, query, where, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// ⚠️ APNA FIREBASE CONFIG YAHAN PASTE KARO
+const firebaseConfig = {
+  apiKey: "AIzaSyDnx-hbmaEqU2hfSECw5vHsKjLXuELtw70",
+  authDomain: "gold-lucky-draw-49e10.firebaseapp.com",
+  projectId: "gold-lucky-draw-49e10",
+  storageBucket: "gold-lucky-draw-49e10.firebasestorage.app",
+  messagingSenderId: "18838125130",
+  appId: "1:18838125130:web:426c1ad4f5be9f4eae04b3",
+  measurementId: "G-VP1VHT2FFE"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentMaster = null;
+
+window.doLogin = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  showLoading(true);
+  try {
+    const uc = await signInWithEmailAndPassword(auth, email, pass);
+    const ud = await getDoc(doc(db, 'users', uc.user.uid));
+    if (!ud.exists() || ud.data().role !== 'master') {
+      await signOut(auth);
+      document.getElementById('loginErr').style.display = 'block';
+      document.getElementById('loginErr').textContent = '❌ Master access nahi!';
+      showLoading(false); return;
+    }
+  } catch(e) {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('loginErr').textContent = '❌ ' + e.message;
+  }
+  showLoading(false);
+};
+
+window.doLogout = async function() { await signOut(auth); location.reload(); };
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const ud = await getDoc(doc(db, 'users', user.uid));
+    if (ud.exists() && ud.data().role === 'master') {
+      currentMaster = { uid: user.uid, ...ud.data() };
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      loadAll();
+    }
+  }
+});
+
+window.goPg = function(p) {
+  document.querySelectorAll('.pg').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  const m = {dashboard:['pg-dashboard','t0'],createuser:['pg-createuser','t1'],transfer:['pg-transfer','t2'],myusers:['pg-myusers','t3'],transactions:['pg-transactions','t4']};
+  if (!m[p]) return;
+  document.getElementById(m[p][0]).classList.add('on');
+  document.getElementById(m[p][1]).classList.add('on');
+};
+
+async function loadAll() {
+  const ud = await getDoc(doc(db, 'users', currentMaster.uid));
+  currentMaster = { ...currentMaster, ...ud.data() };
+  const bal = currentMaster.balance || 0;
+  document.getElementById('masterBal').textContent = '₹' + bal.toLocaleString('en-IN');
+  document.getElementById('dashBal').textContent = '₹' + bal.toLocaleString('en-IN');
+  document.getElementById('createBal').textContent = '₹' + bal.toLocaleString('en-IN');
+  document.getElementById('transferBal').textContent = '₹' + bal.toLocaleString('en-IN');
+  loadUsers(); loadTransactions(); loadDashTx();
+}
+
+async function loadUsers() {
+  const q = query(collection(db, 'users'), where('masterId', '==', currentMaster.uid), where('role', '==', 'user'));
+  const snap = await getDocs(q);
+  document.getElementById('dashUsers').textContent = snap.docs.length;
+  document.getElementById('usersCount').textContent = snap.docs.length;
+  const sel = document.getElementById('tUser');
+  sel.innerHTML = '<option value="">Choose user</option>' + snap.docs.map(d => `<option value="${d.id}">${d.data().username||d.data().email} (₹${(d.data().balance||0).toLocaleString('en-IN')})</option>`).join('');
+  document.getElementById('usersList').innerHTML = snap.docs.length ? snap.docs.map(d => {
+    const u = d.data();
+    return `<div class="pi">
+      <div class="pn" style="background:linear-gradient(135deg,#5ddd8a,#2a7d40)">U</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${u.username||u.email}</div>
+        <div style="font-size:10px;color:rgba(80,120,220,0.4)">${u.email} | Balance: ₹${(u.balance||0).toLocaleString('en-IN')}</div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Koi user nahi</div>';
+}
+
+async function loadTransactions() {
+  const q = query(collection(db, 'transactions'), where('fromId', '==', currentMaster.uid), orderBy('timestamp', 'desc'), limit(30));
+  const snap = await getDocs(q);
+  document.getElementById('txCount').textContent = snap.docs.length;
+  document.getElementById('txList').innerHTML = snap.docs.length ? snap.docs.map(d => {
+    const tx = d.data();
+    const ts = tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString('en-IN') : '—';
+    return `<div class="tx"><span class="tx-minus">-₹${tx.amount.toLocaleString('en-IN')}</span><div style="flex:1"><div style="font-size:12px">${tx.note}</div><div style="font-size:9px;color:rgba(80,120,220,0.3)">${ts}</div></div></div>`;
+  }).join('') : '<div class="empty">Koi transaction nahi</div>';
+}
+
+async function loadDashTx() {
+  const q1 = query(collection(db, 'transactions'), where('toId', '==', currentMaster.uid), orderBy('timestamp', 'desc'), limit(10));
+  const snap = await getDocs(q1);
+  document.getElementById('dashTx').innerHTML = snap.docs.length ? snap.docs.map(d => {
+    const tx = d.data();
+    const ts = tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString('en-IN') : '—';
+    return `<div class="tx"><span class="tx-plus">+₹${tx.amount.toLocaleString('en-IN')}</span><div style="flex:1"><div style="font-size:12px">${tx.note}</div><div style="font-size:9px;color:rgba(80,120,220,0.3)">${ts}</div></div></div>`;
+  }).join('') : '<div class="empty">Koi transaction nahi</div>';
+}
+
+window.createUser = async function() {
+  const email = document.getElementById('uEmail').value.trim();
+  const pass = document.getElementById('uPass').value;
+  const name = document.getElementById('uName').value.trim();
+  const bal = parseInt(document.getElementById('uBal').value) || 0;
+  if (!email || !pass || !name) { toast('Saari fields bhari!', 'l'); return; }
+  const mBal = currentMaster.balance || 0;
+  if (bal > mBal) { toast('Balance insufficient!', 'l'); return; }
+  showLoading(true);
+  try {
+    const uc = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db, 'users', uc.user.uid), {
+      email, username: name, role: 'user', balance: bal,
+      masterId: currentMaster.uid, createdAt: serverTimestamp()
+    });
+    await updateDoc(doc(db, 'users', currentMaster.uid), { balance: mBal - bal });
+    await addDoc(collection(db, 'transactions'), {
+      fromId: currentMaster.uid, toId: uc.user.uid,
+      amount: bal, type: 'debit', note: 'User created: ' + name,
+      timestamp: serverTimestamp()
+    });
+    currentMaster.balance = mBal - bal;
+    document.getElementById('uEmail').value = ''; document.getElementById('uPass').value = ''; document.getElementById('uName').value = '';
+    toast('User ' + name + ' created! ₹' + bal, 'g');
+    loadAll();
+  } catch(e) { toast('Error: ' + e.message, 'l'); }
+  showLoading(false);
+};
+
+window.doTransfer = async function() {
+  const uid = document.getElementById('tUser').value;
+  const amt = parseInt(document.getElementById('tAmt').value) || 0;
+  if (!uid) { toast('User select karo!', 'l'); return; }
+  if (amt <= 0) { toast('Amount daalo!', 'l'); return; }
+  const mBal = currentMaster.balance || 0;
+  if (amt > mBal) { toast('Balance insufficient!', 'l'); return; }
+  showLoading(true);
+  try {
+    const uDoc = await getDoc(doc(db, 'users', uid));
+    await updateDoc(doc(db, 'users', uid), { balance: (uDoc.data().balance || 0) + amt });
+    await updateDoc(doc(db, 'users', currentMaster.uid), { balance: mBal - amt });
+    await addDoc(collection(db, 'transactions'), {
+      fromId: currentMaster.uid, toId: uid, amount: amt, type: 'transfer',
+      note: 'Token transfer to: ' + (uDoc.data().username || uDoc.data().email),
+      timestamp: serverTimestamp()
+    });
+    currentMaster.balance = mBal - amt;
+    document.getElementById('tAmt').value = '';
+    toast('₹' + amt + ' → ' + (uDoc.data().username || uid), 'g');
+    loadAll();
+  } catch(e) { toast('Error: ' + e.message, 'l'); }
+  showLoading(false);
+};
+
+function showLoading(show) { document.getElementById('loading').className = show ? 'loading show' : 'loading'; }
+let toastTimer;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type==='g'?' tg':type==='l'?' tl':' tb');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>

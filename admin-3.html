@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Draw — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;font-family:'Exo 2',sans-serif;color:#d4b896;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(220,40,40,0.06),transparent 50%)}
+.login-screen{position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:1000}
+.login-box{background:#111;border:1px solid rgba(220,60,60,0.3);border-radius:16px;padding:36px;width:90%;max-width:340px;text-align:center}
+.app-title{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:#e87070;margin-bottom:4px}
+.app-sub{font-size:10px;color:rgba(220,80,80,0.4);letter-spacing:4px;text-transform:uppercase;margin-bottom:24px}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes fadeUp{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+@keyframes popIn{0%{transform:scale(0.8);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+@keyframes cfF{0%{opacity:1}100%{opacity:0;transform:translateY(160px) rotate(800deg)}}
+@keyframes spF{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
+.topbar{display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;border-bottom:1px solid rgba(220,60,60,0.15);padding:12px 16px;position:sticky;top:0;z-index:99}
+.topbar-title{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:#e87070;letter-spacing:2px}
+.tabs{display:flex;background:#0d0d0d;border-bottom:1px solid rgba(220,60,60,0.1);overflow-x:auto}
+.tab{flex:0 0 auto;padding:11px 16px;text-align:center;cursor:pointer;font-size:10px;font-weight:600;letter-spacing:1px;color:rgba(220,80,80,0.35);border-bottom:1px solid transparent;transition:all 0.3s;text-transform:uppercase;white-space:nowrap}
+.tab.on{color:#e87070;border-bottom-color:#e87070}
+.pg{display:none;max-width:900px;margin:0 auto;padding:16px 12px 80px}
+.pg.on{display:block;animation:fadeUp 0.3s ease}
+.card{background:#111;border:1px solid rgba(220,60,60,0.1);border-radius:12px;padding:16px;margin-bottom:12px}
+.card-b{background:#100f18;border-color:rgba(80,100,220,0.14)}
+.ct{font-size:9px;color:rgba(220,80,80,0.65);letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(220,60,60,0.07);display:flex;align-items:center;gap:7px}
+.ct::before{content:'';width:12px;height:1px;background:rgba(220,80,80,0.5)}
+label{font-size:10px;color:rgba(220,80,80,0.4);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:4px;margin-top:10px}
+label:first-child{margin-top:0}
+input,select{background:#0d0d0d;border:1px solid rgba(220,60,60,0.12);border-radius:7px;color:#d4b896;padding:9px 12px;font-family:'Exo 2',sans-serif;font-size:13px;width:100%;outline:none;transition:all 0.2s}
+input:focus,select:focus{border-color:rgba(220,60,60,0.4)}
+select option{background:#111}
+.btn{padding:9px 16px;border:none;border-radius:7px;cursor:pointer;font-family:'Exo 2',sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;transition:all 0.2s}
+.bg{background:linear-gradient(135deg,#7a4e00,#c8a050,#7a4e00);background-size:200%;color:#0a0a0a;font-weight:800;animation:shimmer 3s linear infinite}
+.bg:hover{transform:translateY(-1px)}
+.bn{background:rgba(40,160,80,0.12);border:1px solid rgba(40,180,80,0.25);color:#5ddd8a}
+.br{background:rgba(160,30,30,0.12);border:1px solid rgba(180,40,40,0.25);color:#e87070}
+.bb{background:rgba(40,80,200,0.12);border:1px solid rgba(50,90,220,0.25);color:#7ea8ff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.frow{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:500px){.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}}
+.scr{overflow-y:auto}
+.scr::-webkit-scrollbar{width:2px}
+.scr::-webkit-scrollbar-thumb{background:rgba(220,60,60,0.3);border-radius:2px}
+.empty{text-align:center;color:rgba(220,60,60,0.18);font-size:12px;padding:18px;font-style:italic}
+.badge{display:inline-flex;padding:3px 9px;border-radius:20px;font-size:9px;font-weight:600;letter-spacing:1px}
+.b-open{background:rgba(40,160,70,0.1);border:1px solid rgba(60,190,80,0.3);color:#5ddd8a;animation:pulse 2s ease infinite}
+.b-closed{background:rgba(160,30,30,0.1);border:1px solid rgba(190,40,40,0.25);color:#e87070}
+.b-done{background:rgba(180,130,40,0.1);border:1px solid rgba(200,160,60,0.3);color:#c8a050}
+.pi{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;background:#0d0d0d;border:1px solid rgba(220,60,60,0.07);margin-bottom:6px}
+.pn{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#e87070,#8b0000);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#fff;flex-shrink:0}
+.pdl{background:transparent;border:none;color:rgba(180,30,30,0.35);cursor:pointer;font-size:14px;margin-left:auto;border-radius:5px;padding:3px 6px}
+.pdl:hover{color:#e87070;background:rgba(160,30,30,0.12)}
+.as{background:#0d0d0d;border:1px solid rgba(220,60,60,0.08);border-radius:9px;padding:11px;text-align:center}
+.av{font-family:'Orbitron',monospace;font-size:17px;color:#e87070;font-weight:700}
+.al{font-size:9px;color:rgba(220,60,60,0.35);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.tx{display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:7px;background:#0d0d0d;border:1px solid rgba(220,60,60,0.07);margin-bottom:5px}
+.tx-plus{color:#5ddd8a;font-weight:700;font-size:13px;min-width:18px}
+.tx-minus{color:#e87070;font-weight:700;font-size:13px;min-width:18px}
+.drc{background:#111;border:1px solid rgba(220,60,60,0.1);border-radius:12px;padding:14px;cursor:default;position:relative;overflow:hidden}
+.drc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(220,60,60,0.3),transparent)}
+.drc-name{font-size:12px;font-weight:700;color:#e87070;margin-bottom:6px;letter-spacing:1px}
+.drc-timer{font-family:'Orbitron',monospace;font-size:20px;color:#5ddd8a;margin:4px 0;text-shadow:0 0 10px rgba(90,220,140,0.4)}
+.si{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;background:#0d0d0d;cursor:pointer;border:1px solid transparent;transition:all 0.15s;margin-bottom:5px}
+.si:hover{border-color:rgba(220,60,60,0.2)}
+.si.on{border-color:rgba(220,60,60,0.4);background:#160f0f}
+.bc{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:8px 0}
+.bcc{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;font-size:7px;font-weight:700;border:1px solid transparent;cursor:default}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-110px);background:rgba(10,10,10,0.98);border-radius:10px;padding:10px 22px;font-size:13px;font-weight:600;z-index:500;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);text-align:center;min-width:180px;border:1px solid rgba(220,60,60,0.15);box-shadow:0 8px 30px rgba(0,0,0,0.9)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.tw{border-color:rgba(60,200,100,0.4)!important;color:#5ddd8a}
+.tl{border-color:rgba(180,40,40,0.35)!important;color:#e87070}
+.tg{border-color:rgba(200,160,60,0.4)!important;color:#c8a050}
+.loading{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:2000;display:none}
+.loading.show{display:flex}
+.spin{width:40px;height:40px;border:3px solid rgba(220,60,60,0.2);border-top-color:#e87070;border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="app-title">👑 ADMIN PANEL</div>
+    <div class="app-sub">Gold Lucky Draw</div>
+    <label>Email</label>
+    <input type="email" id="loginEmail" placeholder="admin@golddraw.com" style="margin-bottom:10px">
+    <label>Password</label>
+    <input type="password" id="loginPass" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" style="margin-bottom:14px">
+    <button class="btn bg" style="width:100%;padding:13px;margin-bottom:8px" onclick="doLogin()">LOGIN →</button>
+    <div style="font-size:11px;color:#e87070;display:none;text-align:center" id="loginErr">❌ Login failed!</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none">
+  <div class="topbar">
+    <div class="topbar-title">👑 ADMIN PANEL</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:11px;color:rgba(220,80,80,0.5)" id="adminEmail">—</div>
+      <button class="btn br" onclick="doLogout()" style="padding:5px 10px;font-size:10px">Exit</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" id="t0" onclick="goPg('dashboard')">📊 Dashboard</div>
+    <div class="tab" id="t1" onclick="goPg('draws')">🎰 Draws</div>
+    <div class="tab" id="t2" onclick="goPg('masters')">🧑‍💼 Masters</div>
+    <div class="tab" id="t3" onclick="goPg('users')">👥 Users</div>
+    <div class="tab" id="t4" onclick="goPg('transactions')">💰 Tokens</div>
+    <div class="tab" id="t5" onclick="goPg('results')">📋 Results</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="pg on" id="pg-dashboard">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+      <div class="as"><div class="av" id="statMasters">0</div><div class="al">Masters</div></div>
+      <div class="as"><div class="av" id="statUsers">0</div><div class="al">Users</div></div>
+      <div class="as"><div class="av" id="statDrawsOpen">0</div><div class="al">Open Draws</div></div>
+      <div class="as"><div class="av" id="statTotalBets">₹0</div><div class="al">Total Bets Today</div></div>
+    </div>
+
+    <!-- Live Draws -->
+    <div class="card">
+      <div class="ct">Live Draws Status</div>
+      <div id="dashDraws" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+        <div class="empty">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+      <div class="ct">Recent Transactions</div>
+      <div class="scr" id="dashTx" style="max-height:250px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- DRAWS -->
+  <div class="pg" id="pg-draws">
+    <div class="card">
+      <div class="ct">Draw Select & Control</div>
+      <div class="g2" style="margin-bottom:10px">
+        <div>
+          <label>Draw Select</label>
+          <select id="drawSel" onchange="onDrawSelect()">
+            <option value="0">Gold Draw #1</option>
+            <option value="1">Silver Draw #2</option>
+            <option value="2">Diamond Draw #3</option>
+            <option value="3">Platinum Draw #4</option>
+            <option value="4">Royal Draw #5</option>
+          </select>
+        </div>
+        <div><label>Draw Naam</label><input type="text" id="drawName" placeholder="Naam"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:rgba(220,80,80,0.4);margin-bottom:10px">
+        <span>Status: <b id="drawStatus" style="color:#e87070">BAND</b></span>
+        <span>Timer: <b id="drawTimerDisplay" style="color:#5ddd8a;font-family:'Orbitron',monospace">00:00:00</b></span>
+      </div>
+      <button class="btn bg" onclick="saveDrawName()" style="width:100%;padding:9px;margin-bottom:10px">✓ Save Name</button>
+      <div class="g3" style="margin-bottom:10px">
+        <div><label>Hours</label><input type="number" id="tH" value="1" min="0" max="24"></div>
+        <div><label>Minutes</label><input type="number" id="tM" value="0" min="0" max="59"></div>
+        <div><label>Seconds</label><input type="number" id="tS" value="0" min="0" max="59"></div>
+      </div>
+      <div class="frow" style="margin-bottom:10px">
+        <button class="btn bn" onclick="startDraw()" style="flex:1">▶ Start</button>
+        <button class="btn br" onclick="stopDraw()" style="flex:1">■ Stop</button>
+        <button class="btn bb" onclick="resetDraw()" style="flex:1">↺ Reset</button>
+      </div>
+    </div>
+
+    <!-- Current Bets Chart -->
+    <div class="card">
+      <div class="ct" style="display:flex;justify-content:space-between">
+        <span>Current Bets Chart</span>
+        <button onclick="loadBets()" style="background:rgba(220,60,60,0.1);border:1px solid rgba(220,60,60,0.2);color:#e87070;padding:3px 10px;border-radius:5px;cursor:pointer;font-size:10px">↺</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:8px">
+        <div class="as"><div class="av" style="font-size:14px" id="bGrand">₹0</div><div class="al">Grand Total</div></div>
+        <div class="as"><div class="av" style="font-size:14px" id="bPlayers">0</div><div class="al">Betters</div></div>
+        <div class="as"><div class="av" style="font-size:14px" id="bConfirmed">0</div><div class="al">Confirmed</div></div>
+      </div>
+      <div class="bc" id="betChart"></div>
+      <div style="display:flex;gap:8px;font-size:9px;margin-top:5px">
+        <span style="color:#5ddd8a">▲ MAX</span>
+        <span style="color:#e87070">▼ MIN</span>
+        <span style="color:#c8a050">● Bet</span>
+      </div>
+    </div>
+
+    <!-- Result Reveal -->
+    <div class="card">
+      <div class="ct">Result Reveal</div>
+      <div class="g2" style="margin-bottom:10px">
+        <div><label>Number (00-99, 100=00)</label><input type="text" id="resultNum" placeholder="e.g. 42"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn bg" onclick="doReveal()" style="width:100%;padding:10px;font-size:14px">🎯 REVEAL!</button></div>
+      </div>
+      <button class="btn bb" onclick="doRandomReveal()" style="width:100%;padding:8px">🎲 Random Result</button>
+    </div>
+
+    <!-- Add Player -->
+    <div class="card">
+      <div class="ct">Player Add</div>
+      <div class="g2">
+        <div><label>Naam</label><input type="text" id="playerName" placeholder="Player naam"></div>
+        <div><label>Ticket</label><input type="text" id="playerTicket" placeholder="Auto generate"></div>
+      </div>
+      <button class="btn bn" onclick="addPlayer()" style="width:100%;margin-top:8px;padding:10px">✚ Add Player</button>
+    </div>
+
+    <!-- Winner -->
+    <div class="card">
+      <div class="ct">Winner Announce</div>
+      <div class="scr" id="winnerList" style="max-height:200px;margin-bottom:10px"><div class="empty">Players add karo</div></div>
+      <div class="frow" style="margin-bottom:8px">
+        <button class="btn bg" onclick="pickRandom()" style="flex:1">🎲 Random Pick</button>
+        <button class="btn bn" onclick="announceWinner()" style="flex:1">👑 Announce!</button>
+      </div>
+      <div style="font-size:11px;color:#c8a050;text-align:center;display:none" id="selWinInfo">—</div>
+    </div>
+
+    <!-- Draw History -->
+    <div class="card">
+      <div class="ct">Draw Results History</div>
+      <div class="scr" id="drawHistory" style="max-height:250px"><div class="empty">Koi result nahi</div></div>
+    </div>
+  </div>
+
+  <!-- MASTERS -->
+  <div class="pg" id="pg-masters">
+    <div class="card" style="background:#140f0f;border-color:rgba(220,60,60,0.15)">
+      <div class="ct">New Master Banao</div>
+      <div class="g2">
+        <div><label>Email</label><input type="email" id="mEmail" placeholder="master@example.com"></div>
+        <div><label>Password</label><input type="password" id="mPass" placeholder="Min 6 chars"></div>
+      </div>
+      <div class="g2" style="margin-top:8px">
+        <div><label>Display Name</label><input type="text" id="mName" placeholder="Master naam"></div>
+        <div><label>Starting Balance (₹)</label><input type="number" id="mBal" value="10000"></div>
+      </div>
+      <button class="btn br" onclick="createMaster()" style="width:100%;margin-top:10px;padding:11px">✚ Create Master</button>
+    </div>
+
+    <div class="card">
+      <div class="ct">Token Transfer → Master</div>
+      <div class="g3">
+        <div><label>Master</label><select id="mTransferSel"><option value="">Choose master</option></select></div>
+        <div><label>Amount (₹)</label><input type="number" id="mTransferAmt" placeholder="Amount"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn bg" onclick="transferToMaster()" style="width:100%;padding:10px">→ Transfer</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ct">All Masters (<span id="masterCount">0</span>)</div>
+      <div class="scr" id="masterList" style="max-height:350px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="pg" id="pg-users">
+    <div class="card">
+      <div class="ct">Balance Update</div>
+      <div class="g3">
+        <div><label>User</label><select id="uBalSel"><option value="">Choose user</option></select></div>
+        <div><label>New Balance (₹)</label><input type="number" id="uBalAmt" value="10000"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn bg" onclick="updateUserBal()" style="width:100%;padding:10px">Set</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">All Users (<span id="userCount">0</span>)</div>
+      <div class="scr" id="userList" style="max-height:400px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="pg" id="pg-transactions">
+    <div class="g2" style="margin-bottom:12px">
+      <div class="as"><div class="av" id="txTotalIn">₹0</div><div class="al">Total In</div></div>
+      <div class="as"><div class="av" id="txTotalOut">₹0</div><div class="al">Total Out</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">All Transactions (<span id="txCount">0</span>)</div>
+      <div class="scr" id="txList" style="max-height:500px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="pg" id="pg-results">
+    <div class="card" style="padding:10px 12px;margin-bottom:10px">
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <select id="resultDrawFilter" onchange="loadResults()" style="flex:1;min-width:120px;padding:8px 10px;font-size:12px">
+          <option value="all">All Draws</option>
+          <option value="0">Gold #1</option><option value="1">Silver #2</option>
+          <option value="2">Diamond #3</option><option value="3">Platinum #4</option><option value="4">Royal #5</option>
+        </select>
+        <button onclick="loadResults()" class="btn bg" style="padding:8px 12px;font-size:11px">↺</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Result History (<span id="resultCount">0</span>)</div>
+      <div class="scr" id="resultList" style="max-height:500px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" id="loading"><div class="spin"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDnx-hbmaEqU2hfSECw5vHsKjLXuELtw70",
+  authDomain: "gold-lucky-draw-49e10.firebaseapp.com",
+  projectId: "gold-lucky-draw-49e10",
+  storageBucket: "gold-lucky-draw-49e10.firebasestorage.app",
+  messagingSenderId: "18838125130",
+  appId: "1:18838125130:web:426c1ad4f5be9f4eae04b3"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Firestore functions compat
+const { doc, getDoc, setDoc, updateDoc, addDoc, collection, 
+        query, where, orderBy, limit, onSnapshot, 
+        getDocs, serverTimestamp, deleteDoc, writeBatch } = firebase.firestore;
+
+
+
+// ⚠️ APNA FIREBASE CONFIG YAHAN PASTE KARO
+const firebaseConfig = {
+  apiKey: "AIzaSyDnx-hbmaEqU2hfSECw5vHsKjLXuELtw70",
+  authDomain: "gold-lucky-draw-49e10.firebaseapp.com",
+  projectId: "gold-lucky-draw-49e10",
+  storageBucket: "gold-lucky-draw-49e10.firebasestorage.app",
+  messagingSenderId: "18838125130",
+  appId: "1:18838125130:web:426c1ad4f5be9f4eae04b3",
+  measurementId: "G-VP1VHT2FFE"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const REDS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36,38,41,43,45,47,49,52,54,56,58,60,63,65,67,69,71,73,75,78,80,82,84,86,88,90,93,95,97,99]);
+
+let currentAdmin = null;
+let selectedDraw = 0;
+let selectedWinner = null;
+let drawTimers = {};
+let drawListeners = {};
+
+// ===== AUTH =====
+window.doLogin = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  showLoading(true);
+  try {
+    const uc = await signInWithEmailAndPassword(auth, email, pass);
+    const ud = await getDoc(db.doc('users', uc.user.uid));
+    if (!ud.exists() || ud.data().role !== 'admin') {
+      await signOut(auth);
+      document.getElementById('loginErr').style.display = 'block';
+      document.getElementById('loginErr').textContent = '❌ Admin access nahi hai!';
+      showLoading(false); return;
+    }
+    currentAdmin = { uid: uc.user.uid, email: uc.user.email, ...ud.data() };
+  } catch(e) {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('loginErr').textContent = '❌ ' + e.message;
+  }
+  showLoading(false);
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+  location.reload();
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const ud = await getDoc(db.doc('users', user.uid));
+    if (ud.exists() && ud.data().role === 'admin') {
+      currentAdmin = { uid: user.uid, email: user.email, ...ud.data() };
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      document.getElementById('adminEmail').textContent = user.email;
+      initDrawListeners();
+      loadDashboard();
+      loadMasters();
+      loadUsers();
+      loadTransactions();
+    }
+  }
+});
+
+// ===== PAGE NAV =====
+window.goPg = function(p) {
+  document.querySelectorAll('.pg').forEach(x => x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  const m = {dashboard:['pg-dashboard','t0'],draws:['pg-draws','t1'],masters:['pg-masters','t2'],users:['pg-users','t3'],transactions:['pg-transactions','t4'],results:['pg-results','t5']};
+  if (!m[p]) return;
+  document.getElementById(m[p][0]).classList.add('on');
+  document.getElementById(m[p][1]).classList.add('on');
+  if (p === 'draws') { loadDrawData(); loadBets(); }
+  if (p === 'results') loadResults();
+};
+
+function fmt(s) {
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+}
+
+// ===== DRAW LISTENERS =====
+function initDrawListeners() {
+  const q = db.collection('draws'));
+  onSnapshot_compat(q, (snap) => {
+    snap.docs.forEach(d => {
+      const draw = d.data();
+      updateDrawUI(d.id, draw);
+    });
+    updateDashDraws(snap.docs.map(d => ({id:d.id,...d.data()})));
+  });
+}
+
+function updateDrawUI(drawId, draw) {
+  const idx = parseInt(drawId.replace('draw',''));
+  const lt = document.getElementById('lt-'+idx);
+  if (lt) {
+    if (draw.timerEnd) {
+      const rem = Math.max(0, Math.floor((draw.timerEnd.toMillis() - Date.now()) / 1000));
+      lt.textContent = fmt(rem);
+    } else lt.textContent = fmt(draw.timerSec || 0);
+  }
+  if (idx === selectedDraw) {
+    const ts = draw.timerEnd ? Math.max(0, Math.floor((draw.timerEnd.toMillis() - Date.now()) / 1000)) : (draw.timerSec || 0);
+    document.getElementById('drawTimerDisplay').textContent = fmt(ts);
+    document.getElementById('drawStatus').textContent = draw.status === 'open' ? 'OPEN' : draw.status === 'done' ? 'DONE' : 'BAND';
+    document.getElementById('drawStatus').style.color = draw.status === 'open' ? '#5ddd8a' : draw.status === 'done' ? '#c8a050' : '#e87070';
+    startLocalTimer(idx, draw);
+  }
+}
+
+function startLocalTimer(idx, draw) {
+  if (drawTimers[idx]) clearInterval(drawTimers[idx]);
+  if (!draw.timerEnd || draw.status !== 'open') return;
+  drawTimers[idx] = setInterval(() => {
+    const rem = Math.max(0, Math.floor((draw.timerEnd.toMillis() - Date.now()) / 1000));
+    if (idx === selectedDraw) document.getElementById('drawTimerDisplay').textContent = fmt(rem);
+    const lt = document.getElementById('lt-'+idx); if (lt) lt.textContent = fmt(rem);
+    if (rem === 0) { clearInterval(drawTimers[idx]); toast('Draw #'+(idx+1)+' timer khatam!', 'g'); }
+  }, 1000);
+}
+
+function updateDashDraws(draws) {
+  const el = document.getElementById('dashDraws');
+  if (!el) return;
+  el.innerHTML = draws.map((d,i) => {
+    const rem = d.timerEnd ? Math.max(0, Math.floor((d.timerEnd.toMillis() - Date.now()) / 1000)) : (d.timerSec || 0);
+    return `<div class="drc">
+      <div class="drc-name">${d.name || 'Draw #'+(i+1)}</div>
+      <div class="drc-timer" id="lt-${i}">${fmt(rem)}</div>
+      <span class="badge ${d.status==='open'?'b-open':d.status==='done'?'b-done':'b-closed'}">${d.status==='open'?'OPEN':d.status==='done'?'DONE':'BAND'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ===== DRAW FUNCTIONS =====
+window.onDrawSelect = function() {
+  selectedDraw = parseInt(document.getElementById('drawSel').value);
+  selectedWinner = null;
+  document.getElementById('selWinInfo').style.display = 'none';
+  loadDrawData();
+  loadBets();
+};
+
+async function loadDrawData() {
+  const d = await getDoc(db.doc('draws', 'draw'+selectedDraw));
+  if (d.exists()) {
+    const data = d.data();
+    document.getElementById('drawName').value = data.name || '';
+    document.getElementById('drawStatus').textContent = data.status==='open'?'OPEN':data.status==='done'?'DONE':'BAND';
+    const rem = data.timerEnd ? Math.max(0, Math.floor((data.timerEnd.toMillis() - Date.now()) / 1000)) : (data.timerSec || 0);
+    document.getElementById('drawTimerDisplay').textContent = fmt(rem);
+    startLocalTimer(selectedDraw, data);
+  }
+  loadDrawPlayers();
+  loadDrawHistory();
+}
+
+window.saveDrawName = async function() {
+  const name = document.getElementById('drawName').value.trim();
+  if (!name) { toast('Naam daalo!', 'l'); return; }
+  await setDoc(db.doc('draws', 'draw'+selectedDraw), { name }, { merge: true });
+  toast('Naam saved!', 'g');
+};
+
+window.startDraw = async function() {
+  const h=parseInt(document.getElementById('tH').value)||0, m=parseInt(document.getElementById('tM').value)||0, s=parseInt(document.getElementById('tS').value)||0;
+  const tot = h*3600+m*60+s;
+  if (!tot) { toast('Timer set karo!', 'l'); return; }
+  const timerEnd = new Date(Date.now() + tot*1000);
+  await setDoc(db.doc('draws', 'draw'+selectedDraw), {
+    status: 'open', timerEnd, timerSec: tot, result: null, winner: null
+  }, { merge: true });
+  toast('Draw shuru! '+fmt(tot), 'g');
+};
+
+window.stopDraw = async function() {
+  if (drawTimers[selectedDraw]) clearInterval(drawTimers[selectedDraw]);
+  await setDoc(db.doc('draws', 'draw'+selectedDraw), {
+    status: 'closed', timerEnd: null, timerSec: 0
+  }, { merge: true });
+  toast('Draw band', 'l');
+};
+
+window.resetDraw = async function() {
+  if (drawTimers[selectedDraw]) clearInterval(drawTimers[selectedDraw]);
+  await setDoc(db.doc('draws', 'draw'+selectedDraw), {
+    status: 'closed', timerEnd: null, timerSec: 0, result: null, winner: null
+  }, { merge: true });
+  // Delete all bets for this draw
+  const bq = db.collection('bets'), where('drawId', '==', 'draw'+selectedDraw));
+  const bsnap = await getDocs_compat(bq);
+  const batch = writeBatch(db);
+  bsnap.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+  toast('Reset ho gaya', 'g');
+  loadDrawData(); loadBets();
+};
+
+window.doReveal = async function() {
+  const v = document.getElementById('resultNum').value.trim();
+  let n = parseInt(v);
+  if (v === '00' || n === 100) n = 0;
+  if (isNaN(n) || n < 0 || n > 100) { toast('00-99 ya 100 daalo!', 'l'); return; }
+  await processReveal(n);
+};
+
+window.doRandomReveal = async function() {
+  const n = Math.floor(Math.random() * 100) + 1;
+  await processReveal(n);
+};
+
+async function processReveal(num) {
+  showLoading(true);
+  try {
+    const isRed = REDS.has(num === 0 ? 100 : num);
+    const ns = num === 0 ? '00' : String(num).padStart(2, '0');
+
+    // Get all confirmed bets for this draw
+    const bq = db.collection('bets'), where('drawId', '==', 'draw'+selectedDraw), where('confirmed', '==', true));
+    const bsnap = await getDocs_compat(bq);
+
+    const batch = writeBatch(db);
+    let totalPayout = 0;
+
+    // Process each bet
+    for (const betDoc of bsnap.docs) {
+      const bet = betDoc.data();
+      const myNum = bet.numBets?.[num] || 0;
+      const numWin = myNum * 90;
+      let gWin = 0;
+      const g = bet.grpBets || {};
+      const isOdd = num !== 0 && num % 2 === 1, isLow = num > 0 && num <= 50;
+      if (g.red>0 && isRed) gWin += g.red * 1.9;
+      if (g.black>0 && !isRed) gWin += g.black * 1.9;
+      if (g.odd>0 && isOdd) gWin += g.odd * 1.9;
+      if (g.even>0 && !isOdd) gWin += g.even * 1.9;
+      if (g.low>0 && isLow) gWin += g.low * 1.9;
+      if (g.high>0 && !isLow) gWin += g.high * 1.9;
+      const ab = bet.abBets || {};
+      const andarD = parseInt(ns[0]), baharD = parseInt(ns[1]);
+      const abAW = (ab['andar_'+andarD] || 0) * 9;
+      const abBW = (ab['bahar_'+baharD] || 0) * 9;
+      const totalReturn = Math.floor(numWin + gWin + abAW + abBW);
+      const net = totalReturn - bet.totalAmount;
+      totalPayout += totalReturn;
+
+      // Update user balance
+      if (bet.userId) {
+        const uRef = db.doc('users', bet.userId);
+        const uDoc = await getDoc(uRef);
+        if (uDoc.exists()) {
+          batch.update(uRef, { balance: (uDoc.data().balance || 0) + totalReturn });
+        }
+        // Add transaction
+        if (net !== 0) {
+          batch.set(doc(db.collection('transactions')), {
+            fromId: 'system', toId: bet.userId,
+            amount: Math.abs(net), type: net >= 0 ? 'credit' : 'debit',
+            note: (net >= 0 ? 'Win' : 'Loss') + ' Draw#' + selectedDraw + ' Num:' + ns,
+            timestamp: serverTimestamp()
+          });
+        }
+      }
+      // Delete processed bet
+      batch.delete(betDoc.ref);
+    }
+
+    // Save result
+    const drawRef = db.doc('draws', 'draw'+selectedDraw);
+    batch.update(drawRef, { status: 'closed', result: num, timerEnd: null });
+
+    // Add to history
+    batch.set(doc(db.collection('history')), {
+      drawId: 'draw'+selectedDraw, result: num, isRed,
+      timestamp: serverTimestamp(), totalPayout
+    });
+
+    await batch.commit();
+    document.getElementById('resultNum').value = '';
+    toast('Result: '+ns+' '+(isRed?'🔴 Red':'⚫ Black')+' | Payout: ₹'+totalPayout.toLocaleString('en-IN'), 'g');
+    loadDrawData(); loadBets(); loadDrawHistory();
+  } catch(e) { toast('Error: '+e.message, 'l'); }
+  showLoading(false);
+}
+
+// ===== BETS CHART =====
+window.loadBets = async function() {
+  const bq = db.collection('bets'), where('drawId', '==', 'draw'+selectedDraw));
+  const snap = await getDocs_compat(bq);
+  const allBets = snap.docs.map(d => d.data());
+  const confirmed = allBets.filter(b => b.confirmed);
+
+  document.getElementById('bGrand').textContent = '₹' + allBets.reduce((a,b) => a + (b.totalAmount||0), 0).toLocaleString('en-IN');
+  document.getElementById('bPlayers').textContent = allBets.length;
+  document.getElementById('bConfirmed').textContent = confirmed.length;
+
+  // Number totals
+  const totals = {};
+  const nums = [...Array(99).keys()].map(i=>i+1); nums.push(0);
+  nums.forEach(n => { totals[n] = 0; });
+
+  confirmed.forEach(bet => {
+    const nb = bet.numBets || {};
+    Object.entries(nb).forEach(([n, v]) => { totals[parseInt(n)] = (totals[parseInt(n)] || 0) + v; });
+    // Group bets distributed (simplified)
+    const g = bet.grpBets || {};
+    const REDS_SIZE = REDS.size;
+    nums.forEach(n => {
+      const rKey = n===0?100:n, isR=REDS.has(rKey), isO=n!==0&&n%2===1, isL=n>0&&n<=50;
+      totals[n] += Math.floor((g.red||0)/REDS_SIZE)*(isR?1:0);
+      totals[n] += Math.floor((g.black||0)/(100-REDS_SIZE))*(!isR?1:0);
+      totals[n] += Math.floor((g.odd||0)/50)*(isO?1:0);
+      totals[n] += Math.floor((g.even||0)/50)*(!isO?1:0);
+      totals[n] += Math.floor((g.low||0)/50)*(isL?1:0);
+      totals[n] += Math.floor((g.high||0)/50)*(!isL?1:0);
+    });
+  });
+
+  const bv = Object.values(totals).filter(v=>v>0);
+  const maxB = bv.length ? Math.max(...bv) : 0, minB = bv.length ? Math.min(...bv) : 0;
+  let html = '';
+  nums.forEach(n => {
+    const ns = String(n).padStart(2,'0'), tot = totals[n], rKey = n===0?100:n, isR = REDS.has(rKey);
+    let bg, bc, fc, lbl = '';
+    if (tot>0 && tot===maxB && maxB!==minB) { bg='rgba(0,180,70,0.4)'; bc='#5ddd8a'; fc='#5ddd8a'; lbl='▲'; }
+    else if (tot>0 && tot===minB && maxB!==minB) { bg='rgba(180,30,30,0.4)'; bc='#e87070'; fc='#e87070'; lbl='▼'; }
+    else if (tot>0) { bg='rgba(120,80,0,0.5)'; bc='rgba(200,150,0,0.6)'; fc='#c8a050'; }
+    else if (isR) { bg='rgba(50,5,5,0.9)'; bc='rgba(80,10,10,0.6)'; fc='#663333'; }
+    else { bg='rgba(10,10,20,0.9)'; bc='rgba(20,20,35,0.6)'; fc='#333355'; }
+    html += `<div class="bcc" style="background:${bg};border-color:${bc};color:${fc}" title="${ns}:₹${tot}"><span style="font-size:7px;font-weight:900">${ns}</span>${tot>0?`<span style="font-size:5px">${lbl}₹${tot}</span>`:''}</div>`;
+  });
+  document.getElementById('betChart').innerHTML = html;
+};
+
+// ===== PLAYERS =====
+async function loadDrawPlayers() {
+  const d = await getDoc(db.doc('draws', 'draw'+selectedDraw));
+  const players = d.exists() ? (d.data().players || []) : [];
+  const wl = document.getElementById('winnerList');
+  wl.innerHTML = players.length ? players.map((p,i) => `
+    <div class="si ${selectedWinner===i?'on':''}" onclick="selectWinner(${i})">
+      <div class="pn">${i+1}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${p.name}</div>
+      <div style="font-size:10px;color:rgba(220,80,80,0.35)">🎫 ${p.ticket}</div></div>
+      ${selectedWinner===i?'<span style="color:#c8a050;font-size:14px">✓</span>':''}
+    </div>`).join('') : '<div class="empty">Koi player nahi</div>';
+}
+
+window.addPlayer = async function() {
+  const name = document.getElementById('playerName').value.trim();
+  if (!name) { toast('Naam daalo!', 'l'); return; }
+  const ticket = document.getElementById('playerTicket').value.trim() || 'TKT-'+String(Date.now()).slice(-5);
+  const d = await getDoc(db.doc('draws', 'draw'+selectedDraw));
+  const players = d.exists() ? (d.data().players || []) : [];
+  players.push({ name, ticket });
+  await setDoc(db.doc('draws', 'draw'+selectedDraw), { players }, { merge: true });
+  document.getElementById('playerName').value = ''; document.getElementById('playerTicket').value = '';
+  toast(name + ' added! 🎫' + ticket, 'g');
+  loadDrawPlayers();
+};
+
+window.selectWinner = function(i) {
+  selectedWinner = i;
+  loadDrawPlayers();
+  document.getElementById('selWinInfo').style.display = 'block';
+};
+
+window.pickRandom = async function() {
+  const d = await getDoc(db.doc('draws', 'draw'+selectedDraw));
+  const players = d.exists() ? (d.data().players || []) : [];
+  if (!players.length) { toast('Koi player nahi!', 'l'); return; }
+  selectedWinner = Math.floor(Math.random() * players.length);
+  loadDrawPlayers();
+  toast('🎲 Random: ' + players[selectedWinner].name, 'g');
+};
+
+window.announceWinner = async function() {
+  if (selectedWinner === null) { toast('Winner select karo!', 'l'); return; }
+  const d = await getDoc(db.doc('draws', 'draw'+selectedDraw));
+  const players = d.exists() ? (d.data().players || []) : [];
+  const w = players[selectedWinner];
+  if (!w) { toast('Invalid selection!', 'l'); return; }
+  await setDoc(db.doc('draws', 'draw'+selectedDraw), { winner: w, status: 'done', timerEnd: null }, { merge: true });
+  selectedWinner = null;
+  toast('👑 Winner: ' + w.name, 'g');
+  loadDrawData();
+};
+
+// ===== DRAW HISTORY =====
+async function loadDrawHistory() {
+  const hq = db.collection('history'), where('drawId', '==', 'draw'+selectedDraw), orderBy('timestamp', 'desc'), limit(20));
+  const snap = await getDocs_compat(hq);
+  const el = document.getElementById('drawHistory');
+  if (!snap.docs.length) { el.innerHTML = '<div class="empty">Koi result nahi</div>'; return; }
+  el.innerHTML = snap.docs.map(d => {
+    const h = d.data();
+    const ns = h.result===0?'00':String(h.result).padStart(2,'0');
+    const isR = REDS.has(h.result===0?100:h.result);
+    const ts = h.timestamp?.toDate ? h.timestamp.toDate().toLocaleString('en-IN') : '—';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0d0d0d;border-radius:8px;border:1px solid rgba(220,60,60,0.07);margin-bottom:6px">
+      <div style="width:40px;height:40px;border-radius:50%;background:${isR?'radial-gradient(circle at 35% 35%,#cc2020,#500000)':'radial-gradient(circle at 35% 35%,#222,#040404)'};display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-size:14px;font-weight:900;color:${isR?'#fff':'#aaa'};flex-shrink:0">${ns}</div>
+      <div style="flex:1"><div style="font-size:11px;color:${isR?'#e87070':'#aaa'};font-weight:600">${isR?'🔴 Red':'⚫ Black'}</div>
+      <div style="font-size:10px;color:rgba(220,80,80,0.35)">${ts}</div></div>
+      <div style="font-size:11px;color:#c8a050">Payout: ₹${(h.totalPayout||0).toLocaleString('en-IN')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== MASTERS =====
+window.createMaster = async function() {
+  const email = document.getElementById('mEmail').value.trim();
+  const pass = document.getElementById('mPass').value;
+  const name = document.getElementById('mName').value.trim();
+  const bal = parseInt(document.getElementById('mBal').value) || 0;
+  if (!email || !pass || !name) { toast('Saari fields bhari!', 'l'); return; }
+  showLoading(true);
+  try {
+    // Create Auth user
+    const uc = await createUserWithEmailAndPassword(auth, email, pass);
+    // Save to Firestore
+    await setDoc(db.doc('users', uc.user.uid), {
+      email, username: name, role: 'master', balance: bal,
+      createdBy: currentAdmin.uid, users: [], transactions: [],
+      createdAt: serverTimestamp()
+    });
+    // Deduct from admin
+    await updateDoc(db.doc('users', currentAdmin.uid), {
+      balance: (currentAdmin.balance || 0) - bal
+    });
+    // Log transaction
+    await addDoc_compat(db.collection('transactions'), {
+      fromId: currentAdmin.uid, toId: uc.user.uid,
+      amount: bal, type: 'debit',
+      note: 'Master created: ' + name,
+      timestamp: serverTimestamp()
+    });
+    document.getElementById('mEmail').value = ''; document.getElementById('mPass').value = ''; document.getElementById('mName').value = '';
+    toast('Master ' + name + ' created! ₹' + bal, 'g');
+    loadMasters();
+  } catch(e) { toast('Error: ' + e.message, 'l'); }
+  showLoading(false);
+};
+
+window.transferToMaster = async function() {
+  const uid = document.getElementById('mTransferSel').value;
+  const amt = parseInt(document.getElementById('mTransferAmt').value) || 0;
+  if (!uid) { toast('Master select karo!', 'l'); return; }
+  if (amt <= 0) { toast('Amount daalo!', 'l'); return; }
+  showLoading(true);
+  try {
+    const mDoc = await getDoc(db.doc('users', uid));
+    if (!mDoc.exists()) { toast('Master not found!', 'l'); showLoading(false); return; }
+    await updateDoc(db.doc('users', uid), { balance: (mDoc.data().balance || 0) + amt });
+    await updateDoc(db.doc('users', currentAdmin.uid), { balance: (currentAdmin.balance || 0) - amt });
+    await addDoc_compat(db.collection('transactions'), {
+      fromId: currentAdmin.uid, toId: uid, amount: amt, type: 'transfer',
+      note: 'Token transfer to Master: ' + mDoc.data().username,
+      timestamp: serverTimestamp()
+    });
+    document.getElementById('mTransferAmt').value = '';
+    toast('₹' + amt + ' → ' + mDoc.data().username, 'g');
+    loadMasters();
+  } catch(e) { toast('Error: ' + e.message, 'l'); }
+  showLoading(false);
+};
+
+async function loadMasters() {
+  const q = db.collection('users'), where('role', '==', 'master'));
+  const snap = await getDocs_compat(q);
+  document.getElementById('masterCount').textContent = snap.docs.length;
+  document.getElementById('statMasters').textContent = snap.docs.length;
+  const sel = document.getElementById('mTransferSel');
+  sel.innerHTML = '<option value="">Choose master</option>' + snap.docs.map(d => `<option value="${d.id}">${d.data().username||d.data().email} (₹${(d.data().balance||0).toLocaleString('en-IN')})</option>`).join('');
+  document.getElementById('masterList').innerHTML = snap.docs.length ? snap.docs.map(d => {
+    const m = d.data();
+    return `<div class="pi">
+      <div class="pn" style="background:linear-gradient(135deg,#7ea8ff,#3060c0)">M</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${m.username||m.email}</div>
+        <div style="font-size:10px;color:rgba(220,80,80,0.4)">${m.email} | Balance: ₹${(m.balance||0).toLocaleString('en-IN')} | Users: ${(m.users||[]).length}</div>
+      </div>
+      <button class="pdl" onclick="deleteMaster('${d.id}')">✕</button>
+    </div>`;
+  }).join('') : '<div class="empty">Koi master nahi</div>';
+}
+
+window.deleteMaster = async function(uid) {
+  if (!confirm('Delete this master?')) return;
+  await updateDoc(db.doc('users', uid), { role: 'deleted' });
+  toast('Master deleted', 'l');
+  loadMasters();
+};
+
+// ===== USERS =====
+async function loadUsers() {
+  const q = db.collection('users'), where('role', '==', 'user'));
+  const snap = await getDocs_compat(q);
+  document.getElementById('userCount').textContent = snap.docs.length;
+  document.getElementById('statUsers').textContent = snap.docs.length;
+  const sel = document.getElementById('uBalSel');
+  sel.innerHTML = '<option value="">Choose user</option>' + snap.docs.map(d => `<option value="${d.id}">${d.data().username||d.data().email} (₹${(d.data().balance||0).toLocaleString('en-IN')})</option>`).join('');
+  document.getElementById('userList').innerHTML = snap.docs.length ? snap.docs.map(d => {
+    const u = d.data();
+    return `<div class="pi">
+      <div class="pn" style="background:linear-gradient(135deg,#5ddd8a,#2a7d40)">U</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${u.username||u.email}</div>
+        <div style="font-size:10px;color:rgba(220,80,80,0.4)">${u.email} | Balance: ₹${(u.balance||0).toLocaleString('en-IN')} | Master: ${u.masterId||'—'}</div>
+      </div>
+      <button class="pdl" onclick="deleteUser('${d.id}')">✕</button>
+    </div>`;
+  }).join('') : '<div class="empty">Koi user nahi</div>';
+}
+
+window.updateUserBal = async function() {
+  const uid = document.getElementById('uBalSel').value;
+  const amt = parseInt(document.getElementById('uBalAmt').value) || 0;
+  if (!uid) { toast('User select karo!', 'l'); return; }
+  await updateDoc(db.doc('users', uid), { balance: amt });
+  toast('Balance updated!', 'g');
+  loadUsers();
+};
+
+window.deleteUser = async function(uid) {
+  if (!confirm('Delete this user?')) return;
+  await updateDoc(db.doc('users', uid), { role: 'deleted' });
+  toast('User deleted', 'l');
+  loadUsers();
+};
+
+// ===== TRANSACTIONS =====
+async function loadTransactions() {
+  const q = db.collection('transactions'), orderBy('timestamp', 'desc'), limit(50));
+  const snap = await getDocs_compat(q);
+  document.getElementById('txCount').textContent = snap.docs.length;
+  let totalIn = 0, totalOut = 0;
+  document.getElementById('txList').innerHTML = snap.docs.length ? snap.docs.map(d => {
+    const tx = d.data();
+    const isIn = tx.type === 'credit';
+    if (isIn) totalIn += tx.amount;
+    else totalOut += tx.amount;
+    const ts = tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString('en-IN') : '—';
+    return `<div class="tx">
+      <span class="${isIn?'tx-plus':'tx-minus'}">${isIn?'+':'-'}₹${tx.amount.toLocaleString('en-IN')}</span>
+      <div style="flex:1"><div style="font-size:12px">${tx.note||'—'}</div>
+      <div style="font-size:9px;color:rgba(220,80,80,0.3)">${ts}</div></div>
+    </div>`;
+  }).join('') : '<div class="empty">Koi transaction nahi</div>';
+  document.getElementById('txTotalIn').textContent = '₹' + totalIn.toLocaleString('en-IN');
+  document.getElementById('txTotalOut').textContent = '₹' + totalOut.toLocaleString('en-IN');
+}
+
+// ===== RESULTS =====
+window.loadResults = async function() {
+  const df = document.getElementById('resultDrawFilter').value;
+  let q;
+  if (df === 'all') q = db.collection('history'), orderBy('timestamp', 'desc'), limit(50));
+  else q = db.collection('history'), where('drawId', '==', 'draw'+df), orderBy('timestamp', 'desc'), limit(50));
+  const snap = await getDocs_compat(q);
+  document.getElementById('resultCount').textContent = snap.docs.length;
+  document.getElementById('resultList').innerHTML = snap.docs.length ? snap.docs.map(d => {
+    const h = d.data();
+    const ns = h.result===0?'00':String(h.result).padStart(2,'0');
+    const isR = REDS.has(h.result===0?100:h.result);
+    const ts = h.timestamp?.toDate ? h.timestamp.toDate().toLocaleString('en-IN') : '—';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0d0d0d;border-radius:8px;border:1px solid rgba(220,60,60,0.07);margin-bottom:6px">
+      <div style="width:42px;height:42px;border-radius:50%;background:${isR?'radial-gradient(circle at 35% 35%,#cc2020,#500000)':'radial-gradient(circle at 35% 35%,#222,#040404)'};display:flex;align-items:center;justify-content:center;font-family:Orbitron;font-size:14px;font-weight:900;color:${isR?'#fff':'#aaa'};flex-shrink:0">${ns}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600;color:${isR?'#e87070':'#aaa'}">${isR?'🔴 Red':'⚫ Black'} • ${h.result!==0&&h.result%2===1?'Odd':'Even'} • ${h.result>0&&h.result<=50?'Low':'High'}</div>
+        <div style="font-size:10px;color:rgba(220,80,80,0.35)">${h.drawId} | ${ts}</div>
+      </div>
+      <div style="font-size:11px;color:#c8a050">₹${(h.totalPayout||0).toLocaleString('en-IN')}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Koi result nahi</div>';
+};
+
+// ===== DASHBOARD =====
+async function loadDashboard() {
+  const openDraws = document.getElementById('statDrawsOpen');
+  const dq = db.collection('draws'), where('status', '==', 'open'));
+  const dsnap = await getDocs_compat(dq);
+  openDraws.textContent = dsnap.docs.length;
+  // Recent transactions
+  const tq = db.collection('transactions'), orderBy('timestamp', 'desc'), limit(10));
+  const tsnap = await getDocs_compat(tq);
+  const dtx = document.getElementById('dashTx');
+  dtx.innerHTML = tsnap.docs.length ? tsnap.docs.map(d => {
+    const tx = d.data();
+    const ts = tx.timestamp?.toDate ? tx.timestamp.toDate().toLocaleString('en-IN') : '—';
+    return `<div class="tx"><span class="${tx.type==='credit'?'tx-plus':'tx-minus'}">${tx.type==='credit'?'+':'-'}₹${tx.amount.toLocaleString('en-IN')}</span><div style="flex:1"><div style="font-size:12px">${tx.note}</div><div style="font-size:9px;color:rgba(220,80,80,0.3)">${ts}</div></div></div>`;
+  }).join('') : '<div class="empty">Koi activity nahi</div>';
+}
+
+// ===== UTILS =====
+function showLoading(show) { document.getElementById('loading').className = show ? 'loading show' : 'loading'; }
+let toastTimer;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type==='g'?' tg':type==='l'?' tl':type==='w'?' tw':'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+
+// Alias for compatibility
+window.adminTransfer = window.transferToMaster;
+
+// Init draws in Firestore if not exist
+async function initDraws() {
+  const names = ['Gold Draw #1','Silver Draw #2','Diamond Draw #3','Platinum Draw #4','Royal Draw #5'];
+  for (let i = 0; i < 5; i++) {
+    const ref = db.doc('draws', 'draw'+i);
+    const d = await getDoc(ref);
+    if (!d.exists()) {
+      await setDoc(ref, { name: names[i], status: 'closed', timerSec: 0, result: null, winner: null, players: [], timerEnd: null });
+    }
+  }
+}
+// Run init
+initDraws();
+
+</script>
+</body>
+</html>
