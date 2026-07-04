@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Gold Lucky Draw</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;font-family:'Exo 2',sans-serif;color:#d4b896;min-height:100vh}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.lw{position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:9999;background-image:radial-gradient(ellipse at 50% 30%,rgba(220,40,40,0.08),transparent 60%)}
+.lb{background:#111;border:1px solid rgba(220,60,60,0.3);border-radius:18px;padding:40px 32px;width:92%;max-width:360px;text-align:center}
+.lt{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:#e87070;margin-bottom:4px}
+.ls{font-size:10px;color:rgba(220,80,80,0.4);letter-spacing:4px;text-transform:uppercase;margin-bottom:28px}
+.tb{background:#0d0d0d;border-bottom:1px solid rgba(220,60,60,0.12);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99}
+.tt{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:#e87070}
+.tabs{display:flex;background:#0d0d0d;border-bottom:1px solid rgba(220,60,60,0.08);overflow-x:auto}
+.tab{flex:0 0 auto;padding:12px 14px;cursor:pointer;font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(220,80,80,0.3);border-bottom:2px solid transparent;transition:all 0.3s;text-transform:uppercase;white-space:nowrap}
+.tab.on{color:#e87070;border-bottom-color:#e87070}
+.pg{display:none;max-width:900px;margin:0 auto;padding:16px 12px 100px}
+.pg.on{display:block}
+.card{background:#111;border:1px solid rgba(220,60,60,0.09);border-radius:12px;padding:16px;margin-bottom:12px}
+.card-r{background:#130d0d;border-color:rgba(220,60,60,0.18)}
+.ct{font-size:9px;color:rgba(220,80,80,0.6);letter-spacing:4px;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(220,60,60,0.06)}
+label{font-size:9px;color:rgba(220,80,80,0.45);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:5px;margin-top:12px}
+label:first-child{margin-top:0}
+input,select{background:#0d0d0d;border:1px solid rgba(220,60,60,0.14);border-radius:8px;color:#d4b896;padding:10px 14px;font-family:'Exo 2',sans-serif;font-size:13px;width:100%;outline:none}
+select option{background:#111}
+.btn{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-family:'Exo 2',sans-serif;font-weight:700;font-size:12px;transition:all 0.2s}
+.bg{background:linear-gradient(135deg,#7a4e00,#c8a050,#9a6a10,#c8a050,#7a4e00);background-size:300% auto;color:#0a0a0a;animation:shimmer 3s linear infinite}
+.bn{background:rgba(40,160,80,0.12);border:1px solid rgba(40,180,80,0.25);color:#5ddd8a}
+.br{background:rgba(160,30,30,0.12);border:1px solid rgba(180,40,40,0.25);color:#e87070}
+.bb{background:rgba(40,80,200,0.12);border:1px solid rgba(50,90,220,0.25);color:#7ea8ff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.frow{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:520px){.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}}
+.sb{background:#0d0d0d;border:1px solid rgba(220,60,60,0.08);border-radius:10px;padding:14px;text-align:center}
+.sv{font-family:'Orbitron',monospace;font-size:20px;color:#e87070;font-weight:700;margin-bottom:4px}
+.sl{font-size:9px;color:rgba(220,60,60,0.35);letter-spacing:2px;text-transform:uppercase}
+.drc{background:#111;border:1px solid rgba(220,60,60,0.1);border-radius:10px;padding:14px}
+.drc-n{font-size:12px;font-weight:700;color:#e87070;margin-bottom:5px}
+.drc-t{font-family:'Orbitron',monospace;font-size:20px;color:#5ddd8a;margin:3px 0}
+.li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:#0d0d0d;border:1px solid rgba(220,60,60,0.07);margin-bottom:7px}
+.lic{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#fff;flex-shrink:0}
+.lcr{background:linear-gradient(135deg,#e87070,#8b0000)}
+.lcb{background:linear-gradient(135deg,#7ea8ff,#3060c0)}
+.lcg{background:linear-gradient(135deg,#5ddd8a,#2a7d40)}
+.db{background:transparent;border:none;color:rgba(180,30,30,0.4);cursor:pointer;font-size:14px;margin-left:auto;padding:3px 7px;border-radius:5px}
+.db:hover{color:#e87070}
+.si{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:#0d0d0d;cursor:pointer;border:1px solid transparent;margin-bottom:5px}
+.si.sel{border-color:rgba(220,60,60,0.45);background:#160f0f}
+.tx{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:#0d0d0d;border:1px solid rgba(220,60,60,0.06);margin-bottom:6px}
+.tp{color:#5ddd8a;font-weight:700;min-width:20px}
+.tm{color:#e87070;font-weight:700;min-width:20px}
+.badge{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:9px;font-weight:700}
+.bo{background:rgba(40,160,70,0.12);border:1px solid rgba(60,190,80,0.3);color:#5ddd8a;animation:pulse 2s infinite}
+.bc2{background:rgba(160,30,30,0.1);border:1px solid rgba(190,40,40,0.25);color:#e87070}
+.bd{background:rgba(180,130,40,0.1);border:1px solid rgba(200,160,60,0.3);color:#c8a050}
+.bc{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin:8px 0}
+.bcc{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;border:1px solid transparent;cursor:default;padding:1px}
+.empty{text-align:center;color:rgba(220,60,60,0.2);font-size:12px;padding:20px;font-style:italic}
+.scr{overflow-y:auto}
+.scr::-webkit-scrollbar{width:2px}
+.scr::-webkit-scrollbar-thumb{background:rgba(220,60,60,0.3);border-radius:2px}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-120px);background:rgba(8,8,8,0.98);border-radius:10px;padding:11px 24px;font-size:13px;font-weight:600;z-index:9999;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);text-align:center;min-width:200px;border:1px solid rgba(220,60,60,0.2);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.tok{border-color:rgba(60,200,100,0.45)!important;color:#5ddd8a}
+.ter{border-color:rgba(200,40,40,0.4)!important;color:#e87070}
+.tin{border-color:rgba(200,160,60,0.4)!important;color:#c8a050}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:9998;flex-direction:column;gap:14px}
+.ov.show{display:flex}
+.sp{width:44px;height:44px;border:3px solid rgba(220,60,60,0.15);border-top-color:#e87070;border-radius:50%;animation:spin 0.8s linear infinite}
+.ot{color:#e87070;font-size:12px;letter-spacing:2px;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<div class="lw" id="lw">
+  <div class="lb">
+    <div class="lt">👑 ADMIN</div>
+    <div class="ls">Gold Lucky Draw</div>
+    <label>Email</label>
+    <input type="email" id="le" value="admin@golddraw.com" style="margin-bottom:12px">
+    <label>Password</label>
+    <input type="password" id="lp" placeholder="Password" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn bg" onclick="login()" style="width:100%;padding:14px;margin-top:16px;font-size:14px">LOGIN →</button>
+    <div id="lerr" style="color:#e87070;font-size:12px;margin-top:12px;min-height:18px"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="tb">
+    <div class="tt">👑 ADMIN</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-family:'Orbitron',monospace;font-size:14px;color:#c8a050;font-weight:700" id="topbal">₹0</div>
+      <button class="btn br" onclick="logout()" style="padding:6px 12px;font-size:10px">Exit</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" id="t0" onclick="go('dash')">📊 Dashboard</div>
+    <div class="tab" id="t1" onclick="go('draws')">🎰 Draws</div>
+    <div class="tab" id="t2" onclick="go('masters')">🧑‍💼 Masters</div>
+    <div class="tab" id="t3" onclick="go('users')">👥 Users</div>
+    <div class="tab" id="t4" onclick="go('txns')">💰 Tokens</div>
+  </div>
+
+  <div class="pg on" id="pg-dash">
+    <div class="g2" style="margin-bottom:12px">
+      <div class="sb"><div class="sv" id="s0">0</div><div class="sl">Masters</div></div>
+      <div class="sb"><div class="sv" id="s1">0</div><div class="sl">Users</div></div>
+      <div class="sb"><div class="sv" id="s2">0</div><div class="sl">Open Draws</div></div>
+      <div class="sb"><div class="sv" id="s3">₹0</div><div class="sl">My Balance</div></div>
+    </div>
+    <div class="card"><div class="ct">5 Draws Live</div><div class="g4" id="ddrawas"><div class="empty">Loading...</div></div></div>
+    <div class="card"><div class="ct">Recent Activity</div><div class="scr" id="dtx" style="max-height:260px"><div class="empty">Loading...</div></div></div>
+  </div>
+
+  <div class="pg" id="pg-draws">
+    <div class="card card-r">
+      <div class="ct">Draw Control</div>
+      <div class="g2" style="margin-bottom:10px">
+        <div><label>Draw</label>
+          <select id="dsel" onchange="loadDraw()">
+            <option value="0">🥇 Gold #1</option><option value="1">🥈 Silver #2</option>
+            <option value="2">💎 Diamond #3</option><option value="3">🏅 Platinum #4</option>
+            <option value="4">👑 Royal #5</option>
+          </select>
+        </div>
+        <div><label>Naam</label><input type="text" id="dnm" placeholder="Draw naam"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px">
+        <span style="color:rgba(220,80,80,0.5)">Status: <b id="dst" style="color:#e87070">BAND</b></span>
+        <span style="font-family:'Orbitron',monospace;font-size:16px;color:#5ddd8a" id="dtim">00:00:00</span>
+      </div>
+      <button class="btn bg" onclick="saveName()" style="width:100%;padding:9px;margin-bottom:12px">✓ Naam Save</button>
+      <div class="g3" style="margin-bottom:12px">
+        <div><label>Ghante</label><input type="number" id="th" value="0" min="0" max="23"></div>
+        <div><label>Minute</label><input type="number" id="tm" value="5" min="0" max="59"></div>
+        <div><label>Second</label><input type="number" id="ts" value="0" min="0" max="59"></div>
+      </div>
+      <div class="frow">
+        <button class="btn bn" onclick="startDraw()" style="flex:1;padding:11px">▶ Start</button>
+        <button class="btn br" onclick="stopDraw()" style="flex:1;padding:11px">■ Stop</button>
+        <button class="btn bb" onclick="resetDraw()" style="flex:1;padding:11px">↺ Reset</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Bets Chart</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:rgba(220,80,80,0.5)">Total: <b style="color:#c8a050" id="btot">₹0</b></span>
+          <button onclick="loadBets()" style="background:rgba(220,60,60,0.1);border:1px solid rgba(220,60,60,0.2);color:#e87070;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:10px">↺</button>
+        </div>
+      </div>
+      <div class="bc" id="bchart"></div>
+    </div>
+    <div class="card">
+      <div class="ct">🎯 Result Reveal</div>
+      <div class="g2" style="margin-bottom:10px">
+        <div><label>Number (0-100)</label><input type="number" id="rn" placeholder="0-100" min="0" max="100"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn bg" onclick="reveal()" style="width:100%;padding:11px;font-size:14px">🎯 REVEAL!</button></div>
+      </div>
+      <button class="btn bb" onclick="randReveal()" style="width:100%;padding:9px">🎲 Random</button>
+    </div>
+    <div class="card">
+      <div class="ct">👥 Players</div>
+      <div class="g2" style="margin-bottom:10px">
+        <div><label>Naam</label><input type="text" id="pn" placeholder="Naam"></div>
+        <div><label>Ticket</label><input type="text" id="pt" placeholder="Auto"></div>
+      </div>
+      <button class="btn bn" onclick="addPlayer()" style="width:100%;padding:10px">✚ Add Player</button>
+    </div>
+    <div class="card">
+      <div class="ct">👑 Winner</div>
+      <div class="scr" id="plist" style="max-height:220px;margin-bottom:10px"><div class="empty">Koi player nahi</div></div>
+      <div class="frow" style="margin-bottom:8px">
+        <button class="btn bg" onclick="randWin()" style="flex:1;padding:10px">🎲 Random</button>
+        <button class="btn bn" onclick="announceWin()" style="flex:1;padding:10px">👑 Announce!</button>
+      </div>
+      <div id="winfo" style="text-align:center;font-size:12px;color:#c8a050;min-height:16px"></div>
+    </div>
+    <div class="card">
+      <div class="ct">📋 History</div>
+      <div class="scr" id="rhist" style="max-height:280px"><div class="empty">Koi result nahi</div></div>
+    </div>
+  </div>
+
+  <div class="pg" id="pg-masters">
+    <div class="card card-r">
+      <div class="ct">✚ Master Banao</div>
+      <div class="g2">
+        <div><label>Email</label><input type="email" id="me" placeholder="master@email.com"></div>
+        <div><label>Password</label><input type="password" id="mp" placeholder="Min 6 chars"></div>
+      </div>
+      <div class="g2" style="margin-top:8px">
+        <div><label>Naam</label><input type="text" id="mn" placeholder="Display naam"></div>
+        <div><label>Balance ₹</label><input type="number" id="mb" value="10000" min="0"></div>
+      </div>
+      <button class="btn br" onclick="createMaster()" style="width:100%;margin-top:12px;padding:12px">✚ Master Banao</button>
+      <div style="font-size:11px;color:rgba(220,80,80,0.4);margin-top:8px;text-align:center">Mera Balance: <b style="color:#c8a050" id="mymb">₹0</b></div>
+    </div>
+    <div class="card">
+      <div class="ct">💸 Token → Master</div>
+      <div class="g3">
+        <div><label>Master</label><select id="mts"><option value="">Choose</option></select></div>
+        <div><label>Amount ₹</label><input type="number" id="mta" placeholder="Amount"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn bg" onclick="xferMaster()" style="width:100%;padding:11px">→ Bhejo</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Masters (<span id="mcnt">0</span>)</div>
+      <div class="scr" id="mlist" style="max-height:400px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <div class="pg" id="pg-users">
+    <div class="card">
+      <div class="ct">Balance Set</div>
+      <div class="g3">
+        <div><label>User</label><select id="ubs"><option value="">Choose</option></select></div>
+        <div><label>Balance ₹</label><input type="number" id="uba" value="5000"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn bg" onclick="setbal()" style="width:100%;padding:11px">Set!</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Users (<span id="ucnt">0</span>)</div>
+      <div class="scr" id="ulist" style="max-height:450px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <div class="pg" id="pg-txns">
+    <div class="g2" style="margin-bottom:12px">
+      <div class="sb"><div class="sv" id="txin" style="color:#5ddd8a">₹0</div><div class="sl">Total IN</div></div>
+      <div class="sb"><div class="sv" id="txout" style="color:#e87070">₹0</div><div class="sl">Total OUT</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Transactions (<span id="txcnt">0</span>)</div>
+      <div class="scr" id="txlist" style="max-height:550px"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ov"><div class="sp"></div><div class="ot" id="otxt">Loading...</div></div>
+<div class="toast" id="tst"></div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyDnx-hbmaEqU2hfSECw5vHsKjLXuELtw70",
+  authDomain:"gold-lucky-draw-49e10.firebaseapp.com",
+  projectId:"gold-lucky-draw-49e10",
+  storageBucket:"gold-lucky-draw-49e10.firebasestorage.app",
+  messagingSenderId:"18838125130",
+  appId:"1:18838125130:web:426c1ad4f5be9f4eae04b3"
+});
+const auth=firebase.auth(), db=firebase.firestore(), FS=firebase.firestore;
+const REDS=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36,38,41,43,45,47,49,52,54,56,58,60,63,65,67,69,71,73,75,78,80,82,84,86,88,90,93,95,97,99]);
+let me=null, sd=0, sw=null, tmrs={};
+
+function login(){
+  const e=document.getElementById('le').value.trim(), p=document.getElementById('lp').value;
+  const err=document.getElementById('lerr');
+  if(!e||!p){err.textContent='Email aur password daalo!';return;}
+  ld(1,'Login...');
+  auth.signInWithEmailAndPassword(e,p)
+    .then(u=>db.collection('users').doc(u.user.uid).get())
+    .then(d=>{
+      if(!d.exists||d.data().role!=='admin')throw new Error('Admin access nahi hai!');
+      me={uid:d.id,...d.data()};
+      showApp();
+    }).catch(ex=>{ld(0);err.textContent='❌ '+ex.message;});
+}
+
+function logout(){auth.signOut().then(()=>location.reload());}
+
+auth.onAuthStateChanged(u=>{
+  if(u){
+    db.collection('users').doc(u.uid).get().then(d=>{
+      if(d.exists){
+        me={uid:u.uid,...d.data()};
+        showApp();
+      } else {
+        // Document nahi mila — phir bhi show karo
+        me={uid:u.uid,email:u.email,balance:0,role:'admin'};
+        showApp();
+      }
+    }).catch(e=>{
+      // Firestore error — phir bhi show karo
+      me={uid:u.uid,email:u.email,balance:0,role:'admin'};
+      showApp();
+    });
+  } else ld(0);
+});
+
+function showApp(){
+  document.getElementById('lw').style.display='none';
+  document.getElementById('app').style.display='block';
+  ld(0);
+  // Pehle Firestore se fresh balance lo
+  db.collection('users').doc(me.uid).get().then(d=>{
+    if(d.exists){
+      me={...me,...d.data()};
+    }
+    upbal();
+    initDraws(); loadDash(); loadMasters(); loadUsers(); loadTxns();
+  }).catch(()=>{
+    upbal();
+    initDraws(); loadDash(); loadMasters(); loadUsers(); loadTxns();
+  });
+}
+
+function go(p){
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  const m={dash:['pg-dash','t0'],draws:['pg-draws','t1'],masters:['pg-masters','t2'],users:['pg-users','t3'],txns:['pg-txns','t4']};
+  if(!m[p])return;
+  document.getElementById(m[p][0]).classList.add('on');
+  document.getElementById(m[p][1]).classList.add('on');
+  if(p==='draws'){loadDraw();loadBets();}
+}
+
+function fmt(s){s=Math.max(0,Math.floor(s));return`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(s%60)}`;}
+function pad(n){return String(n).padStart(2,'0');}
+function ns(n){return n===0?'00':pad(n);}
+function ld(show,txt){document.getElementById('ov').className=show?'ov show':'ov';if(txt)document.getElementById('otxt').textContent=txt;}
+let _t;function toast(m,t){const e=document.getElementById('tst');e.textContent=m;e.className='toast show '+(t||'tin');clearTimeout(_t);_t=setTimeout(()=>e.classList.remove('show'),3500);}
+function getBalance(data) {
+  try {
+    // Check all possible field names (Hindi/English)
+    const b = data.balance || data['संतुलन'] || data.Balance || 0;
+    if (!b) return 0;
+    const num = parseFloat(String(b).replace(/,/g,''));
+    return isNaN(num) ? 0 : num;
+  } catch(e) { return 0; }
+}
+
+function upbal(){
+  if(!me)return;
+  db.collection('users').doc(me.uid).get().then(d=>{
+    if(d.exists){
+      me.balance = getBalance(d.data());
+    }
+    const b = me.balance || 0;
+    document.getElementById('topbal').textContent = '₹' + b.toLocaleString('en-IN');
+    document.getElementById('s3').textContent = '₹' + b.toLocaleString('en-IN');
+    const mymb = document.getElementById('mymb');
+    if(mymb) mymb.textContent = '₹' + b.toLocaleString('en-IN');
+  }).catch(e => console.log('Balance error:', e));
+}
+
+async function initDraws(){
+  const nms=['Gold Draw #1','Silver Draw #2','Diamond Draw #3','Platinum Draw #4','Royal Draw #5'];
+  for(let i=0;i<5;i++){const r=db.collection('draws').doc('draw'+i);const d=await r.get();if(!d.exists)await r.set({name:nms[i],status:'closed',timerEnd:null,timerSec:0,result:null,winner:null,players:[]});}
+  db.collection('draws').onSnapshot(snap=>{
+    const ds=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>parseInt(a.id.replace('draw',''))-parseInt(b.id.replace('draw','')));
+    renderDash(ds);
+    document.getElementById('s2').textContent=ds.filter(d=>d.status==='open').length;
+    ds.forEach(d=>{
+      const i=parseInt(d.id.replace('draw',''));
+      if(d.status==='open'&&d.timerEnd){
+        if(!tmrs[i]){tmrs[i]=setInterval(()=>{
+          const r=Math.max(0,(d.timerEnd.toMillis()-Date.now())/1000);
+          const el=document.getElementById('dt'+i);if(el)el.textContent=fmt(r);
+          if(i===sd)document.getElementById('dtim').textContent=fmt(r);
+          if(r<=0){clearInterval(tmrs[i]);delete tmrs[i];db.collection('draws').doc(d.id).update({status:'closed',timerEnd:null});toast(d.name+' khatam!','tin');}
+        },1000);}
+      } else {if(tmrs[i]){clearInterval(tmrs[i]);delete tmrs[i];}}
+      if(i===sd)updDst(d);
+    });
+  });
+}
+
+function renderDash(ds){
+  const el=document.getElementById('ddrawas');if(!el)return;
+  el.innerHTML=ds.map((d,i)=>{const r=d.timerEnd?Math.max(0,(d.timerEnd.toMillis()-Date.now())/1000):(d.timerSec||0);
+    return`<div class="drc"><div class="drc-n">${d.name}</div><div class="drc-t" id="dt${i}">${fmt(r)}</div><span class="badge ${d.status==='open'?'bo':d.status==='done'?'bd':'bc2'}">${d.status==='open'?'OPEN':d.status==='done'?'DONE':'BAND'}</span>${d.result!=null?`<div style="font-size:14px;color:#c8a050;margin-top:5px;font-family:'Orbitron',monospace;font-weight:700">${ns(d.result)}</div>`:''}</div>`;
+  }).join('');
+}
+
+function updDst(d){
+  const r=d.timerEnd?Math.max(0,(d.timerEnd.toMillis()-Date.now())/1000):(d.timerSec||0);
+  document.getElementById('dtim').textContent=fmt(r);
+  const st=document.getElementById('dst');
+  st.textContent=d.status==='open'?'OPEN':d.status==='done'?'DONE':'BAND';
+  st.style.color=d.status==='open'?'#5ddd8a':d.status==='done'?'#c8a050':'#e87070';
+}
+
+function loadDraw(){
+  sd=parseInt(document.getElementById('dsel').value);sw=null;
+  document.getElementById('winfo').textContent='';
+  db.collection('draws').doc('draw'+sd).get().then(d=>{
+    if(!d.exists)return;
+    const dt=d.data();
+    document.getElementById('dnm').value=dt.name||'';
+    updDst(dt); loadPlayers(); loadHist(); loadBets();
+  });
+}
+
+function saveName(){const n=document.getElementById('dnm').value.trim();if(!n){toast('Naam daalo!','ter');return;}db.collection('draws').doc('draw'+sd).update({name:n}).then(()=>toast('Naam saved! ✓','tok'));}
+
+function startDraw(){
+  const h=parseInt(document.getElementById('th').value)||0,m=parseInt(document.getElementById('tm').value)||0,s=parseInt(document.getElementById('ts').value)||0;
+  const tot=h*3600+m*60+s;if(!tot){toast('Timer set karo!','ter');return;}
+  ld(1,'Starting...');
+  db.collection('draws').doc('draw'+sd).update({status:'open',timerEnd:FS.Timestamp.fromDate(new Date(Date.now()+tot*1000)),timerSec:tot,result:null,winner:null})
+    .then(()=>{ld(0);toast('Draw shuru! ⏱'+fmt(tot),'tok');loadDraw();}).catch(e=>{ld(0);toast(e.message,'ter');});
+}
+
+function stopDraw(){if(tmrs[sd]){clearInterval(tmrs[sd]);delete tmrs[sd];}db.collection('draws').doc('draw'+sd).update({status:'closed',timerEnd:null,timerSec:0}).then(()=>{toast('Band kiya','tin');loadDraw();});}
+
+function resetDraw(){
+  if(!confirm('Reset? Saare bets delete honge!'))return;
+  if(tmrs[sd]){clearInterval(tmrs[sd]);delete tmrs[sd];}
+  ld(1,'Resetting...');
+  db.collection('draws').doc('draw'+sd).update({status:'closed',timerEnd:null,timerSec:0,result:null,winner:null,players:[]})
+    .then(()=>db.collection('bets').where('drawId','==','draw'+sd).get())
+    .then(sn=>{const b=db.batch();sn.docs.forEach(d=>b.delete(d.ref));return b.commit();})
+    .then(()=>{ld(0);toast('Reset! ✓','tok');loadDraw();loadBets();}).catch(e=>{ld(0);toast(e.message,'ter');});
+}
+
+function reveal(){let n=parseInt(document.getElementById('rn').value);if(isNaN(n)||n<0||n>100){toast('0-100 daalo!','ter');return;}if(n===100)n=0;doReveal(n);}
+function randReveal(){doReveal(Math.floor(Math.random()*100)+1);}
+
+function doReveal(n){
+  ld(1,'Revealing...');
+  const isR=REDS.has(n===0?100:n),numS=ns(n),isO=n!==0&&n%2===1,isL=n>0&&n<=50;
+  const aD=parseInt(numS[0]),bD=parseInt(numS[1]);
+  db.collection('bets').where('drawId','==','draw'+sd).where('confirmed','==',true).get()
+    .then(async sn=>{
+      const batch=db.batch();let pay=0;
+      for(const doc of sn.docs){
+        const bt=doc.data(),nb=bt.numBets||{},gb=bt.grpBets||{},ab=bt.abBets||{};
+        const nw=(nb[String(n)]||0)*90;
+        let gw=0;
+        if(gb.red>0&&isR)gw+=gb.red*1.9;if(gb.black>0&&!isR)gw+=gb.black*1.9;
+        if(gb.odd>0&&isO)gw+=gb.odd*1.9;if(gb.even>0&&!isO)gw+=gb.even*1.9;
+        if(gb.low>0&&isL)gw+=gb.low*1.9;if(gb.high>0&&!isL)gw+=gb.high*1.9;
+        const aw=((ab['a'+aD]||0)+(ab['b'+bD]||0))*9;
+        const ret=Math.floor(nw+gw+aw),net=ret-(bt.totalAmount||0);
+        pay+=ret;
+        if(bt.userId&&ret>0){const ud=await db.collection('users').doc(bt.userId).get();if(ud.exists)batch.update(db.collection('users').doc(bt.userId),{balance:(ud.data().balance||0)+ret});}
+        if(bt.userId&&net!==0)batch.set(db.collection('transactions').doc(),{fromId:'system',toId:bt.userId,amount:Math.abs(net),type:net>0?'credit':'debit',note:(net>0?'🎉 Win':'❌ Loss')+' Draw#'+sd+' '+numS,timestamp:FS.FieldValue.serverTimestamp()});
+        batch.delete(doc.ref);
+      }
+      batch.update(db.collection('draws').doc('draw'+sd),{status:'closed',result:n,timerEnd:null});
+      batch.set(db.collection('history').doc(),{drawId:'draw'+sd,result:n,isRed:isR,payout:pay,timestamp:FS.FieldValue.serverTimestamp()});
+      return batch.commit().then(()=>pay);
+    })
+    .then(pay=>{ld(0);document.getElementById('rn').value='';toast('Result: '+numS+' '+(isR?'🔴':'⚫')+' | ₹'+pay.toLocaleString('en-IN'),'tok');loadDraw();loadBets();loadHist();})
+    .catch(e=>{ld(0);toast(e.message,'ter');});
+}
+
+function loadBets(){
+  db.collection('bets').where('drawId','==','draw'+sd).get().then(sn=>{
+    const all=sn.docs.map(d=>d.data()),conf=all.filter(b=>b.confirmed);
+    document.getElementById('btot').textContent='₹'+all.reduce((s,b)=>s+(b.totalAmount||0),0).toLocaleString('en-IN');
+    const tots={};const nums=[...Array(99).keys()].map(i=>i+1);nums.push(0);
+    nums.forEach(n=>tots[n]=0);
+    conf.forEach(b=>{const nb=b.numBets||{};Object.entries(nb).forEach(([k,v])=>{tots[parseInt(k)]=(tots[parseInt(k)]||0)+v;});});
+    const vs=Object.values(tots).filter(v=>v>0),mx=vs.length?Math.max(...vs):0,mn=vs.length?Math.min(...vs):0;
+    let html='';
+    nums.forEach(n=>{
+      const t=tots[n],isR=REDS.has(n===0?100:n);
+      let bg,bc,fc,lb='';
+      if(t>0&&t===mx&&mx!==mn){bg='rgba(0,180,70,0.4)';bc='#5ddd8a';fc='#5ddd8a';lb='▲';}
+      else if(t>0&&t===mn&&mx!==mn){bg='rgba(180,30,30,0.4)';bc='#e87070';fc='#e87070';lb='▼';}
+      else if(t>0){bg='rgba(110,70,0,0.55)';bc='rgba(200,150,0,0.7)';fc='#ffd700';}
+      else if(isR){bg='rgba(40,4,4,0.95)';bc='rgba(60,8,8,0.5)';fc='rgba(200,80,80,0.35)';}
+      else{bg='rgba(8,8,18,0.95)';bc='rgba(15,15,30,0.5)';fc='rgba(80,80,180,0.35)';}
+      html+=`<div class="bcc" style="background:${bg};border-color:${bc};color:${fc}" title="${ns(n)}: ₹${t}"><span style="font-size:7px;font-weight:900">${ns(n)}</span>${t>0?`<span style="font-size:5px">${lb}${t}</span>`:''}</div>`;
+    });
+    document.getElementById('bchart').innerHTML=html;
+  });
+}
+
+function loadPlayers(){
+  db.collection('draws').doc('draw'+sd).get().then(d=>{
+    const ps=d.exists?(d.data().players||[]):[];
+    const el=document.getElementById('plist');
+    el.innerHTML=ps.length?ps.map((p,i)=>`<div class="si ${sw===i?'sel':''}" onclick="pickW(${i})"><div class="lic lcr">${i+1}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${p.name}</div><div style="font-size:10px;color:rgba(220,80,80,0.4)">🎫 ${p.ticket}</div></div>${sw===i?'<span style="color:#c8a050;font-size:16px">✓</span>':''}</div>`).join(''):'<div class="empty">Koi player nahi</div>';
+  });
+}
+
+function addPlayer(){
+  const n=document.getElementById('pn').value.trim();if(!n){toast('Naam daalo!','ter');return;}
+  const t=document.getElementById('pt').value.trim()||'TKT'+String(Date.now()).slice(-6);
+  db.collection('draws').doc('draw'+sd).get().then(d=>{
+    const ps=d.exists?(d.data().players||[]):[];ps.push({name:n,ticket:t});
+    return db.collection('draws').doc('draw'+sd).update({players:ps});
+  }).then(()=>{document.getElementById('pn').value='';document.getElementById('pt').value='';toast(n+' added! 🎫','tok');loadPlayers();});
+}
+
+function pickW(i){sw=i;loadPlayers();}
+
+function randWin(){
+  db.collection('draws').doc('draw'+sd).get().then(d=>{
+    const ps=d.exists?(d.data().players||[]):[];
+    if(!ps.length){toast('Pehle players add karo!','ter');return;}
+    sw=Math.floor(Math.random()*ps.length);loadPlayers();toast('🎲 '+ps[sw].name,'tin');
+  });
+}
+
+function announceWin(){
+  if(sw===null){toast('Winner select karo!','ter');return;}
+  db.collection('draws').doc('draw'+sd).get().then(d=>{
+    const w=(d.data().players||[])[sw];if(!w)return;
+    return db.collection('draws').doc('draw'+sd).update({winner:w,status:'done',timerEnd:null}).then(()=>w);
+  }).then(w=>{if(!w)return;if(tmrs[sd]){clearInterval(tmrs[sd]);delete tmrs[sd];}document.getElementById('winfo').textContent='👑 '+w.name+' — 🎫 '+w.ticket;sw=null;toast('👑 Winner: '+w.name,'tok');loadPlayers();});
+}
+
+function loadHist(){
+  db.collection('history').where('drawId','==','draw'+sd).orderBy('timestamp','desc').limit(20).get()
+    .then(sn=>{
+      const el=document.getElementById('rhist');
+      if(!sn.docs.length){el.innerHTML='<div class="empty">Koi result nahi</div>';return;}
+      el.innerHTML=sn.docs.map(d=>{
+        const h=d.data(),isR=REDS.has(h.result===0?100:h.result),ts=h.timestamp?.toDate?h.timestamp.toDate().toLocaleString('en-IN'):'—';
+        return`<div class="li"><div style="width:40px;height:40px;border-radius:50%;background:${isR?'radial-gradient(circle at 35% 35%,#c02020,#4a0000)':'radial-gradient(circle at 35% 35%,#1a1a1a,#040404)'};display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:${isR?'#fff':'#999'};flex-shrink:0">${ns(h.result)}</div><div style="flex:1"><div style="font-size:12px;font-weight:600;color:${isR?'#e87070':'#aaa'}">${isR?'🔴 Red':'⚫ Black'}</div><div style="font-size:10px;color:rgba(220,80,80,0.35)">${ts}</div></div><div style="font-size:11px;color:#c8a050">₹${(h.payout||0).toLocaleString('en-IN')}</div></div>`;
+      }).join('');
+    }).catch(()=>{});
+}
+
+function createMaster(){
+  const e=document.getElementById('me').value.trim(),p=document.getElementById('mp').value,n=document.getElementById('mn').value.trim(),b=parseInt(document.getElementById('mb').value)||0;
+  if(!e||!p||!n){toast('Saari fields bhari!','ter');return;}
+  if(p.length<6){toast('Password 6+ chars!','ter');return;}
+  if(b>(me.balance||0)){toast('Balance kam hai!','ter');return;}
+  ld(1,'Master ban raha hai...');
+  auth.createUserWithEmailAndPassword(e,p)
+    .then(uc=>db.collection('users').doc(uc.user.uid).set({email:e,username:n,role:'master',balance:b,createdBy:me.uid,createdAt:FS.FieldValue.serverTimestamp()}))
+    .then(()=>db.collection('users').doc(me.uid).update({balance:(me.balance||0)-b}))
+    .then(()=>db.collection('transactions').add({fromId:me.uid,toId:'master',amount:b,type:'debit',note:'✚ Master: '+n,timestamp:FS.FieldValue.serverTimestamp()}))
+    .then(()=>{me.balance=(me.balance||0)-b;ld(0);document.getElementById('me').value='';document.getElementById('mp').value='';document.getElementById('mn').value='';toast('Master '+n+' ready! ₹'+b,'tok');loadMasters();upbal();})
+    .catch(e=>{ld(0);toast(e.message,'ter');});
+}
+
+function xferMaster(){
+  const uid=document.getElementById('mts').value,amt=parseInt(document.getElementById('mta').value)||0;
+  if(!uid){toast('Master choose karo!','ter');return;}if(amt<=0){toast('Amount daalo!','ter');return;}
+  if(amt>(me.balance||0)){toast('Balance kam!','ter');return;}
+  ld(1,'Transfer...');
+  db.collection('users').doc(uid).get().then(md=>{
+    const batch=db.batch();
+    batch.update(db.collection('users').doc(uid),{balance:(md.data().balance||0)+amt});
+    batch.update(db.collection('users').doc(me.uid),{balance:(me.balance||0)-amt});
+    batch.set(db.collection('transactions').doc(),{fromId:me.uid,toId:uid,amount:amt,type:'transfer',note:'💸 → '+(md.data().username||uid),timestamp:FS.FieldValue.serverTimestamp()});
+    return batch.commit().then(()=>md.data().username);
+  }).then(mn=>{me.balance=(me.balance||0)-amt;ld(0);document.getElementById('mta').value='';toast('₹'+amt.toLocaleString('en-IN')+' → '+mn,'tok');loadMasters();upbal();})
+  .catch(e=>{ld(0);toast(e.message,'ter');});
+}
+
+function loadMasters(){
+  db.collection('users').where('role','==','master').get().then(sn=>{
+    document.getElementById('mcnt').textContent=sn.docs.length;
+    document.getElementById('s0').textContent=sn.docs.length;
+    const sel=document.getElementById('mts');
+    sel.innerHTML='<option value="">Choose</option>'+sn.docs.map(d=>`<option value="${d.id}">${d.data().username||d.data().email} (₹${(d.data().balance||0).toLocaleString('en-IN')})</option>`).join('');
+    document.getElementById('mlist').innerHTML=sn.docs.length?sn.docs.map(d=>{const m=d.data();return`<div class="li"><div class="lic lcb">M</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${m.username||'—'}</div><div style="font-size:10px;color:rgba(220,80,80,0.4)">${m.email} · ₹${(m.balance||0).toLocaleString('en-IN')}</div></div><button class="db" onclick="del('${d.id}','master')">✕</button></div>`;}).join(''):'<div class="empty">Koi master nahi</div>';
+  });
+}
+
+function loadUsers(){
+  db.collection('users').where('role','==','user').get().then(sn=>{
+    document.getElementById('ucnt').textContent=sn.docs.length;
+    document.getElementById('s1').textContent=sn.docs.length;
+    const sel=document.getElementById('ubs');
+    sel.innerHTML='<option value="">Choose</option>'+sn.docs.map(d=>`<option value="${d.id}">${d.data().username||d.data().email} (₹${(d.data().balance||0).toLocaleString('en-IN')})</option>`).join('');
+    document.getElementById('ulist').innerHTML=sn.docs.length?sn.docs.map(d=>{const u=d.data();return`<div class="li"><div class="lic lcg">U</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${u.username||'—'}</div><div style="font-size:10px;color:rgba(220,80,80,0.4)">${u.email} · ₹${(u.balance||0).toLocaleString('en-IN')}</div></div><button class="db" onclick="del('${d.id}','user')">✕</button></div>`;}).join(''):'<div class="empty">Koi user nahi</div>';
+  });
+}
+
+function setbal(){
+  const uid=document.getElementById('ubs').value,amt=parseInt(document.getElementById('uba').value)||0;
+  if(!uid){toast('User choose karo!','ter');return;}
+  db.collection('users').doc(uid).update({balance:amt}).then(()=>{toast('Balance: ₹'+amt.toLocaleString('en-IN'),'tok');loadUsers();});
+}
+
+function del(uid,role){
+  if(!confirm(role+' delete?'))return;
+  db.collection('users').doc(uid).delete().then(()=>{toast('Deleted','tin');if(role==='master')loadMasters();else loadUsers();});
+}
+
+function loadTxns(){
+  db.collection('transactions').orderBy('timestamp','desc').limit(60).get().then(sn=>{
+    document.getElementById('txcnt').textContent=sn.docs.length;
+    let ti=0,to=0;
+    document.getElementById('txlist').innerHTML=sn.docs.length?sn.docs.map(d=>{
+      const tx=d.data(),ts=tx.timestamp?.toDate?tx.timestamp.toDate().toLocaleString('en-IN'):'—',isI=tx.type==='credit';
+      if(isI)ti+=tx.amount;else to+=tx.amount;
+      return`<div class="tx"><span class="${isI?'tp':'tm'}">${isI?'+':'-'}₹${(tx.amount||0).toLocaleString('en-IN')}</span><div style="flex:1"><div style="font-size:12px">${tx.note||'—'}</div><div style="font-size:9px;color:rgba(220,80,80,0.3)">${ts}</div></div></div>`;
+    }).join(''):'<div class="empty">Koi tx nahi</div>';
+    document.getElementById('txin').textContent='₹'+ti.toLocaleString('en-IN');
+    document.getElementById('txout').textContent='₹'+to.toLocaleString('en-IN');
+  }).catch(()=>{});
+}
+
+function loadDash(){
+  db.collection('transactions').orderBy('timestamp','desc').limit(12).get().then(sn=>{
+    document.getElementById('dtx').innerHTML=sn.docs.length?sn.docs.map(d=>{
+      const tx=d.data(),ts=tx.timestamp?.toDate?tx.timestamp.toDate().toLocaleString('en-IN'):'—',isI=tx.type==='credit';
+      return`<div class="tx"><span class="${isI?'tp':'tm'}">${isI?'+':'-'}₹${(tx.amount||0).toLocaleString('en-IN')}</span><div style="flex:1"><div style="font-size:12px">${tx.note||'—'}</div><div style="font-size:9px;color:rgba(220,80,80,0.3)">${ts}</div></div></div>`;
+    }).join(''):'<div class="empty">Koi activity nahi</div>';
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>
